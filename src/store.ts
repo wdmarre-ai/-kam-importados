@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Perfil, Sucursal } from './domain/tipos';
+import type { Perfil, Sucursal } from './domain/tipos';
 
 interface AppStore {
   // Auth
