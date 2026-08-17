@@ -88,7 +88,8 @@ export const productoRepo = {
     const { data } = await supabase
       .from('productos')
       .select('*')
-      .eq('sucursal_id', sucursalId);
+      .eq('sucursal_id', sucursalId)
+      .eq('estado', 'en_stock');
     return data ?? [];
   },
 
@@ -103,22 +104,32 @@ export const productoRepo = {
   },
 
   async create(producto: any) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('productos')
       .insert([producto])
       .select()
       .single();
+    if (error) throw error;
     return data;
   },
 
   async update(id: string, updates: any) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('productos')
       .update(updates)
       .eq('id', id)
       .select()
       .single();
+    if (error) throw error;
     return data;
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('productos')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
   },
 };
 
@@ -156,33 +167,51 @@ export const clienteRepo = {
     return data ?? [];
   },
 
-  async getByTelefono(telefono: string) {
+  async getByTelefono(telefono: string, sucursalId: string) {
     const { data } = await supabase
       .from('clientes')
       .select('*')
       .eq('telefono', telefono)
+      .eq('sucursal_id', sucursalId)
       .single();
     return data;
   },
 
   async create(cliente: any) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('clientes')
       .insert([cliente])
       .select()
       .single();
+    if (error) throw error;
     return data;
+  },
+
+  async getOrCreate(telefono: string, sucursalId: string, clienteData: any) {
+    try {
+      const existing = await this.getByTelefono(telefono, sucursalId);
+      if (existing) return existing;
+    } catch {
+      // No existe, crear uno nuevo
+    }
+
+    return this.create({
+      ...clienteData,
+      telefono,
+      sucursal_id: sucursalId,
+    });
   },
 };
 
 // Ventas
 export const ventaRepo = {
   async create(venta: any) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('ventas')
       .insert([venta])
       .select()
       .single();
+    if (error) throw error;
     return data;
   },
 
@@ -198,8 +227,21 @@ export const ventaRepo = {
         .lte('fecha', to);
     }
 
-    const { data } = await query;
+    const { data, error } = await query;
+    if (error) throw error;
     return data ?? [];
+  },
+};
+
+// Venta Items
+export const ventaItemRepo = {
+  async createBatch(items: any[]) {
+    const { data, error } = await supabase
+      .from('venta_items')
+      .insert(items)
+      .select();
+    if (error) throw error;
+    return data;
   },
 };
 

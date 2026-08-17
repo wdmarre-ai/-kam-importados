@@ -12,6 +12,8 @@ export default function Mercaderia() {
   const [showForm, setShowForm] = useState(false);
   const [editingProducto, setEditingProducto] = useState<Producto | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const categorias = [
     { id: '1', nombre: 'iPhone' },
@@ -31,6 +33,9 @@ export default function Mercaderia() {
   };
 
   const handleFormSubmit = (data: any) => {
+    setErrorMsg('');
+    setSuccessMsg('');
+
     const productoData = {
       ...data,
       sucursal_id: sucursal?.id,
@@ -38,18 +43,44 @@ export default function Mercaderia() {
     };
 
     if (editingProducto) {
-      update({ id: editingProducto.id, updates: productoData });
+      update(
+        { id: editingProducto.id, updates: productoData },
+        {
+          onSuccess: () => {
+            setSuccessMsg('✅ Producto actualizado correctamente');
+            setShowForm(false);
+            setTimeout(() => setSuccessMsg(''), 2000);
+          },
+          onError: (err: any) => {
+            setErrorMsg(`❌ Error: ${err.message}`);
+          },
+        }
+      );
     } else {
-      create(productoData);
+      create(productoData, {
+        onSuccess: () => {
+          setSuccessMsg('✅ Producto creado correctamente');
+          setShowForm(false);
+          setTimeout(() => setSuccessMsg(''), 2000);
+        },
+        onError: (err: any) => {
+          setErrorMsg(`❌ Error: ${err.message}`);
+        },
+      });
     }
-
-    setShowForm(false);
   };
 
-  const handleDeleteProducto = (id: string) => {
+  const handleDeleteProducto = async (id: string) => {
     if (confirm('¿Estás seguro de que querés eliminar este producto?')) {
-      // TODO: Implementar delete en repo
-      console.log('Delete:', id);
+      setErrorMsg('');
+      try {
+        const { productoRepo } = await import('../../data/repo');
+        await productoRepo.delete(id);
+        setSuccessMsg('✅ Producto eliminado');
+        setTimeout(() => setSuccessMsg(''), 2000);
+      } catch (err: any) {
+        setErrorMsg(`❌ Error al eliminar: ${err.message}`);
+      }
     }
   };
 
@@ -78,6 +109,18 @@ export default function Mercaderia() {
           </button>
         </div>
       </div>
+
+      {/* Mensajes */}
+      {errorMsg && (
+        <div className="p-3 bg-red-50 dark:bg-red-900 dark:bg-opacity-20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm mb-4">
+          {errorMsg}
+        </div>
+      )}
+      {successMsg && (
+        <div className="p-3 bg-green-50 dark:bg-green-900 dark:bg-opacity-20 border border-green-200 dark:border-green-800 rounded text-green-700 dark:text-green-400 text-sm mb-4">
+          {successMsg}
+        </div>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

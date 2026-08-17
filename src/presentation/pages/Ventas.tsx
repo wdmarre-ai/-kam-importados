@@ -18,14 +18,17 @@ interface CartItem {
 export default function Ventas() {
   const sucursal = useStore((s) => s.sucursal);
   const user = useStore((s) => s.user);
-  const { ventas } = useVentas();
+  const { ventas, createVentaCompleta, isCreating } = useVentas();
   const { productos } = useProductos();
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [tipoVenta, setTipoVenta] = useState<TipoCliente>('minorista');
   const [medioPago, setMedioPago] = useState<MedioPago>('efectivo');
-  const [isProcessing, setIsProcessing] = useState(false);
   const [precioDolar] = useState(900); // TODO: Hacer dinámico
+  const [clienteNombre, setClienteNombre] = useState('');
+  const [clienteTelefono, setClienteTelefono] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleAddToCart = (producto: any) => {
     const existingItem = cartItems.find((item) => item.productoId === producto.id);
@@ -78,28 +81,56 @@ export default function Ventas() {
   };
 
   const handleCheckout = async () => {
-    if (!cartItems.length || !user || !sucursal) return;
+    setErrorMsg('');
+    setSuccessMsg('');
 
-    setIsProcessing(true);
-    try {
-      const total = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
-
-      // TODO: Crear venta en Supabase
-      console.log('Creando venta:', {
-        total,
-        items: cartItems,
-        tipoVenta,
-        medioPago,
-        usuario: user.id,
-        sucursal: sucursal.id,
-      });
-
-      setCartItems([]);
-    } catch (error) {
-      console.error('Error al procesar venta:', error);
-    } finally {
-      setIsProcessing(false);
+    if (!cartItems.length) {
+      setErrorMsg('El carrito está vacío');
+      return;
     }
+
+    if (!clienteNombre.trim()) {
+      setErrorMsg('Ingresá el nombre del cliente');
+      return;
+    }
+
+    if (!clienteTelefono.trim()) {
+      setErrorMsg('Ingresá el teléfono del cliente');
+      return;
+    }
+
+    if (!user || !sucursal) {
+      setErrorMsg('Error: No hay usuario o sucursal seleccionada');
+      return;
+    }
+
+    createVentaCompleta(
+      {
+        items: cartItems.map((item) => ({
+          productoId: item.productoId,
+          precio: item.precio,
+          cantidad: item.cantidad,
+        })),
+        clienteNombre: clienteNombre.trim(),
+        clienteTelefono: clienteTelefono.trim(),
+        tipo: tipoVenta,
+        medioPago,
+        precioDolar,
+      },
+      {
+        onSuccess: () => {
+          const total = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
+          setSuccessMsg(`✅ Venta guardada correctamente. Total: $${total.toFixed(2)}`);
+          setCartItems([]);
+          setClienteNombre('');
+          setClienteTelefono('');
+          setTimeout(() => setSuccessMsg(''), 3000);
+        },
+        onError: (err: any) => {
+          setErrorMsg(`❌ Error al guardar: ${err.message}`);
+        },
+      }
+    );
   };
 
   const totalVentasMes = ventas.reduce((sum, v) => sum + v.total_pesos, 0);
@@ -161,7 +192,7 @@ export default function Ventas() {
                   <button
                     key={p.id}
                     onClick={() => handleAddToCart(p)}
-                    disabled={isProcessing}
+                    disabled={isCreating}
                     className="text-left p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-kam-gold dark:hover:border-kam-gold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <div className="font-semibold text-sm text-gray-900 dark:text-white">
@@ -186,7 +217,51 @@ export default function Ventas() {
         </div>
 
         {/* Right: Cart */}
-        <div>
+        <div className="space-y-4">
+          {/* Mensajes */}
+          {errorMsg && (
+            <div className="p-3 bg-red-50 dark:bg-red-900 dark:bg-opacity-20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm">
+              {errorMsg}
+            </div>
+          )}
+          {successMsg && (
+            <div className="p-3 bg-green-50 dark:bg-green-900 dark:bg-opacity-20 border border-green-200 dark:border-green-800 rounded text-green-700 dark:text-green-400 text-sm">
+              {successMsg}
+            </div>
+          )}
+
+          {/* Datos cliente */}
+          <div className="card space-y-3">
+            <h3 className="font-semibold text-gray-900 dark:text-white">👤 Datos del Cliente</h3>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Nombre *
+              </label>
+              <input
+                type="text"
+                value={clienteNombre}
+                onChange={(e) => setClienteNombre(e.target.value)}
+                className="input-field w-full text-sm"
+                placeholder="Nombre del cliente"
+                disabled={isCreating || isCreating}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Teléfono *
+              </label>
+              <input
+                type="tel"
+                value={clienteTelefono}
+                onChange={(e) => setClienteTelefono(e.target.value)}
+                className="input-field w-full text-sm"
+                placeholder="+54 9 1234567890"
+                disabled={isCreating || isCreating}
+              />
+            </div>
+          </div>
+
+          {/* Carrito */}
           <POSCart
             items={cartItems}
             tipo={tipoVenta}
@@ -197,7 +272,7 @@ export default function Ventas() {
             onChangeMedioPago={setMedioPago}
             onChangeCantidad={handleChangeCantidad}
             onCheckout={handleCheckout}
-            isProcessing={isProcessing}
+            isProcessing={isCreating}
           />
         </div>
       </div>

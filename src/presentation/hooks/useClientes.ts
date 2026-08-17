@@ -20,15 +20,8 @@ export function useClientes() {
   });
 
   const getOrCreate = async (telefono: string, clienteData: any) => {
-    const existing = await clienteRepo.getByTelefono(telefono);
-    if (existing) return existing;
-
-    const newCliente = {
-      ...clienteData,
-      telefono,
-      sucursal_id: sucursal?.id,
-    };
-    return clienteRepo.create(newCliente);
+    if (!sucursal) throw new Error('No sucursal');
+    return clienteRepo.getOrCreate(telefono, sucursal.id, clienteData);
   };
 
   return {
