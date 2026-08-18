@@ -72,18 +72,18 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Botón para mostrar/ocultar el menú, disponible en cualquier tamaño de pantalla */}
+      {/* Botón fijo para mostrar/ocultar el menú: siempre en el mismo lugar, sin fondo sólido para no verse como un cuadrado pegado */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg bg-kam-gold text-white shadow-lg font-semibold text-base"
+        className="fixed top-4 left-4 z-50 flex items-center justify-center w-8 h-8 rounded-md text-gray-500 dark:text-gray-400 hover:bg-black hover:bg-opacity-5 dark:hover:bg-white dark:hover:bg-opacity-10 text-base"
+        aria-label={isOpen ? 'Ocultar menú' : 'Abrir menú'}
       >
-        <span className="text-xl">☰</span>
-        Menú
+        ☰
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 min-w-0 flex-shrink-0 transition-[width] duration-300 ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 min-w-0 flex-shrink-0 ${
           isOpen ? 'w-64' : 'w-0'
         } bg-white dark:bg-kam-dark border-r border-gray-200 dark:border-gray-700 overflow-hidden`}
       >
@@ -94,7 +94,7 @@ export default function Sidebar() {
               <div className="w-10 h-10 bg-kam-gold rounded-lg flex items-center justify-center text-white font-bold text-lg">
                 K
               </div>
-              <div className="text-left">
+              <div className="text-left flex-1">
                 <h1 className="font-bold text-gray-900 dark:text-white text-sm">
                   KAM
                 </h1>
