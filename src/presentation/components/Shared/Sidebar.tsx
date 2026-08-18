@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { auth } from '../../../data/repo';
 import { useStore } from '../../../store';
+import ImpulsaCredit from './ImpulsaCredit';
 
 interface MenuItem {
   id: string;
@@ -156,6 +157,8 @@ export default function Sidebar() {
               <span className="text-lg">🚪</span>
               <span className="flex-1 text-left">Cerrar sesión</span>
             </button>
+
+            <ImpulsaCredit variant="compact" />
           </div>
         </div>
       </aside>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../../data/repo';
 import { useStore } from '../../store';
+import ImpulsaCredit from '../components/Shared/ImpulsaCredit';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -106,6 +107,10 @@ export default function LoginPage() {
         {/* Brand */}
         <div className="text-center mt-8 text-gray-600 dark:text-gray-400 text-sm">
           <p>© 2026 KAM Importados. Todos los derechos reservados.</p>
+        </div>
+
+        <div className="flex justify-center mt-6">
+          <ImpulsaCredit />
         </div>
       </div>
     </div>
