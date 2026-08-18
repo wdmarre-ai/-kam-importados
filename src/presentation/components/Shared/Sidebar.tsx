@@ -21,7 +21,7 @@ export default function Sidebar() {
   const menuItems: MenuItem[] = [
     {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: 'Gestión',
       path: '/',
       icon: '📊',
       color: 'bg-blue-500',

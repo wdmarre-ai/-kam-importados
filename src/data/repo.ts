@@ -54,6 +54,11 @@ export const perfilRepo = {
       .single();
     return data;
   },
+
+  async getAllBySucursal(sucursalId: string) {
+    const { data } = await supabase.from('perfiles').select('*').eq('sucursal_id', sucursalId);
+    return data ?? [];
+  },
 };
 
 // Sucursales
@@ -356,6 +361,22 @@ export const ventaRepo = {
       query = query
         .gte('fecha', from)
         .lte('fecha', to);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data ?? [];
+  },
+
+  async getAllConDetalle(sucursalId: string, from?: string, to?: string) {
+    let query = supabase
+      .from('ventas')
+      .select('*, cliente:clientes(nombre), venta_items(cantidad, subtotal, producto:productos(modelo, categoria_id, categoria:categorias(nombre)))')
+      .eq('sucursal_id', sucursalId)
+      .order('fecha', { ascending: false });
+
+    if (from && to) {
+      query = query.gte('fecha', from).lte('fecha', to);
     }
 
     const { data, error } = await query;
