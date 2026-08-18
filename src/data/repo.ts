@@ -390,8 +390,9 @@ export const reparacionRepo = {
   async getAll(sucursalId: string) {
     const { data } = await supabase
       .from('reparaciones')
-      .select('*')
-      .eq('sucursal_id', sucursalId);
+      .select('*, cliente:clientes(*)')
+      .eq('sucursal_id', sucursalId)
+      .order('fecha_ingreso', { ascending: false });
     return data ?? [];
   },
 

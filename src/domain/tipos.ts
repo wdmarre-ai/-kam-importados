@@ -63,7 +63,7 @@ export type TipoCliente = 'minorista' | 'mayorista';
 export interface Cliente {
   id: string;
   nombre: string;
-  telefonoce: string;
+  telefono: string;
   email?: string;
   direccion?: string;
   tipo: TipoCliente;
@@ -86,6 +86,7 @@ export interface Venta {
   sucursal_id: string;
   conformidad: boolean;
   info_garantia?: string;
+  reparacion_id?: string | null;
   created_at: string;
 }
 
@@ -153,6 +154,7 @@ export interface Reparacion {
   sucursal_id: string;
   created_at: string;
   updated_at: string;
+  cliente?: Cliente;
 }
 
 export interface ReparacionRemito {
