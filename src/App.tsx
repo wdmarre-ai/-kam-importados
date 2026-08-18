@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { auth } from './data/repo';
+import { auth, perfilRepo, sucursalRepo } from './data/repo';
 import { useStore } from './store';
 import LoginPage from './presentation/pages/LoginPage';
 import Dashboard from './presentation/pages/Dashboard';
@@ -18,22 +18,35 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const user = useStore((s) => s.user);
   const setUser = useStore((s) => s.setUser);
+  const setPerfil = useStore((s) => s.setPerfil);
+  const setSucursal = useStore((s) => s.setSucursal);
+
+  const cargarPerfilYSucursal = async (userId: string) => {
+    const perfil = await perfilRepo.getByUserId(userId);
+    if (!perfil) return;
+    setPerfil(perfil);
+    const sucursal = await sucursalRepo.getById(perfil.sucursal_id);
+    if (sucursal) setSucursal(sucursal);
+  };
 
   useEffect(() => {
     // Verificar usuario actual al cargar
-    auth.getCurrentUser().then((user) => {
+    auth.getCurrentUser().then(async (user) => {
       setUser(user);
+      if (user) await cargarPerfilYSucursal(user.id);
       setIsLoading(false);
     });
 
     // Suscribirse a cambios de auth
     const { data } = auth.onAuthStateChange((user) => {
       setUser(user);
+      if (user) cargarPerfilYSucursal(user.id);
     });
 
     return () => {
       data?.subscription?.unsubscribe?.();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setUser]);
 
   if (isLoading) {

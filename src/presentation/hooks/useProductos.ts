@@ -32,6 +32,16 @@ export function useProductos() {
     return productoRepo.getByImei(imei, sucursal.id);
   };
 
+  const actualizarCostosMutation = useMutation({
+    mutationFn: ({ categoriaId, factor }: { categoriaId: string; factor: number }) => {
+      if (!sucursal) throw new Error('No hay sucursal seleccionada');
+      return productoRepo.actualizarCostosPorCategoria(categoriaId, sucursal.id, factor);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['productos', sucursal?.id] });
+    },
+  });
+
   return {
     productos,
     isLoading,
@@ -41,5 +51,7 @@ export function useProductos() {
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     getByImei,
+    actualizarCostosPorCategoria: actualizarCostosMutation.mutate,
+    isActualizandoCostos: actualizarCostosMutation.isPending,
   };
 }

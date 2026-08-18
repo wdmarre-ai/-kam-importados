@@ -118,6 +118,7 @@ export interface Compra {
   costo_envio: number;
   costo_total: number;
   sucursal_id: string;
+  usuario_id: string;
   created_at: string;
 }
 

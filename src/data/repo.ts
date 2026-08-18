@@ -131,6 +131,36 @@ export const productoRepo = {
       .eq('id', id);
     if (error) throw error;
   },
+
+  async actualizarCostosPorCategoria(categoriaId: string, sucursalId: string, factor: number) {
+    const { data: productos, error: errGet } = await supabase
+      .from('productos')
+      .select('id, costo_unitario, precio_minorista, precio_mayorista')
+      .eq('categoria_id', categoriaId)
+      .eq('sucursal_id', sucursalId);
+    if (errGet) throw errGet;
+    if (!productos || productos.length === 0) return [];
+
+    const actualizaciones = await Promise.all(
+      productos.map((p) =>
+        supabase
+          .from('productos')
+          .update({
+            costo_unitario: p.costo_unitario * factor,
+            precio_minorista: p.precio_minorista * factor,
+            precio_mayorista: p.precio_mayorista * factor,
+          })
+          .eq('id', p.id)
+          .select()
+          .single()
+      )
+    );
+
+    const conError = actualizaciones.find((r) => r.error);
+    if (conError?.error) throw conError.error;
+
+    return actualizaciones.map((r) => r.data);
+  },
 };
 
 // Stock
@@ -154,6 +184,91 @@ export const stockRepo = {
       .select()
       .single();
     return data;
+  },
+
+  async upsertSumando(productoId: string, sucursalId: string, cantidadAAgregar: number) {
+    const existente = await stockRepo.getByProductoId(productoId, sucursalId).catch(() => null);
+    if (existente) {
+      return stockRepo.updateCantidad(productoId, sucursalId, existente.cantidad + cantidadAAgregar);
+    }
+    const { data, error } = await supabase
+      .from('stock')
+      .insert([{ producto_id: productoId, sucursal_id: sucursalId, cantidad: cantidadAAgregar }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async getAll(sucursalId: string) {
+    const { data } = await supabase
+      .from('stock')
+      .select('*')
+      .eq('sucursal_id', sucursalId);
+    return data ?? [];
+  },
+};
+
+// Categorías
+export const categoriaRepo = {
+  async getAll() {
+    const { data } = await supabase.from('categorias').select('*').order('nombre');
+    return data ?? [];
+  },
+
+  async getOrCreate(nombre: string) {
+    const { data: existente } = await supabase
+      .from('categorias')
+      .select('*')
+      .eq('nombre', nombre)
+      .maybeSingle();
+    if (existente) return existente;
+
+    const { data, error } = await supabase
+      .from('categorias')
+      .insert([{ nombre }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+};
+
+// Compras
+export const compraRepo = {
+  async create(compra: any) {
+    const { data, error } = await supabase
+      .from('compras')
+      .insert([compra])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async createItemsBatch(items: any[]) {
+    const { data, error } = await supabase
+      .from('compra_items')
+      .insert(items)
+      .select();
+    if (error) throw error;
+    return data;
+  },
+
+  async getAll(sucursalId: string, from?: string, to?: string) {
+    let query = supabase
+      .from('compras')
+      .select('*')
+      .eq('sucursal_id', sucursalId)
+      .order('fecha', { ascending: false });
+
+    if (from && to) {
+      query = query.gte('fecha', from).lte('fecha', to);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data ?? [];
   },
 };
 

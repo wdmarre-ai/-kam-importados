@@ -1,73 +1,76 @@
 import { useState } from 'react';
 import { useProductos } from '../hooks/useProductos';
+import { useCompras } from '../hooks/useCompras';
+import { useCategorias } from '../hooks/useCategorias';
 import { useStore } from '../../store';
 import ProductoForm from '../components/InventoryTable/ProductoForm';
 import ProductoTable from '../components/InventoryTable/ProductoTable';
+import CompraForm from '../components/InventoryTable/CompraForm';
+import ActualizarCostoDolarForm from '../components/InventoryTable/ActualizarCostoDolarForm';
+import { descargarCsvStock } from '../../services/exportStock';
 import type { Producto } from '../../domain/tipos';
 
 export default function Mercaderia() {
   const sucursal = useStore((s) => s.sucursal);
-  const { productos, isLoading, isCreating, isUpdating, create, update } =
+  const { productos, isLoading, isUpdating, update, actualizarCostosPorCategoria, isActualizandoCostos } =
     useProductos();
-  const [showForm, setShowForm] = useState(false);
+  const { categorias } = useCategorias();
+  const { createCompraCompleta, isCreating: isCreandoCompra } = useCompras();
+
+  const [showCompraForm, setShowCompraForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [showDolarForm, setShowDolarForm] = useState(false);
   const [editingProducto, setEditingProducto] = useState<Producto | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  const categorias = [
-    { id: '1', nombre: 'iPhone' },
-    { id: '2', nombre: 'Samsung' },
-    { id: '3', nombre: 'Accesorios' },
-    { id: '4', nombre: 'Otros' },
-  ];
-
-  const handleAddProducto = () => {
-    setEditingProducto(null);
-    setShowForm(true);
-  };
-
   const handleEditProducto = (producto: Producto) => {
     setEditingProducto(producto);
-    setShowForm(true);
+    setShowEditForm(true);
   };
 
-  const handleFormSubmit = (data: any) => {
+  const handleEditSubmit = (data: any) => {
+    if (!editingProducto) return;
     setErrorMsg('');
     setSuccessMsg('');
-
-    const productoData = {
-      ...data,
-      sucursal_id: sucursal?.id,
-      estado: 'en_stock',
-    };
-
-    if (editingProducto) {
-      update(
-        { id: editingProducto.id, updates: productoData },
-        {
-          onSuccess: () => {
-            setSuccessMsg('✅ Producto actualizado correctamente');
-            setShowForm(false);
-            setTimeout(() => setSuccessMsg(''), 2000);
-          },
-          onError: (err: any) => {
-            setErrorMsg(`❌ Error: ${err.message}`);
-          },
-        }
-      );
-    } else {
-      create(productoData, {
+    update(
+      { id: editingProducto.id, updates: data },
+      {
         onSuccess: () => {
-          setSuccessMsg('✅ Producto creado correctamente');
-          setShowForm(false);
+          setSuccessMsg('✅ Producto actualizado correctamente');
+          setShowEditForm(false);
           setTimeout(() => setSuccessMsg(''), 2000);
         },
-        onError: (err: any) => {
-          setErrorMsg(`❌ Error: ${err.message}`);
-        },
-      });
-    }
+        onError: (err: any) => setErrorMsg(`❌ Error: ${err.message}`),
+      }
+    );
+  };
+
+  const handleCompraSubmit = (data: any) => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    createCompraCompleta(data, {
+      onSuccess: () => {
+        setSuccessMsg('✅ Compra registrada. Los productos ya están en stock.');
+        setShowCompraForm(false);
+        setTimeout(() => setSuccessMsg(''), 3000);
+      },
+      onError: (err: any) => setErrorMsg(`❌ Error al registrar la compra: ${err.message}`),
+    });
+  };
+
+  const handleDolarSubmit = (data: { categoriaId: string; factor: number }) => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    actualizarCostosPorCategoria(data, {
+      onSuccess: () => {
+        setSuccessMsg('✅ Costos y precios actualizados por cotización del dólar');
+        setShowDolarForm(false);
+        setTimeout(() => setSuccessMsg(''), 3000);
+      },
+      onError: (err: any) => setErrorMsg(`❌ Error al actualizar: ${err.message}`),
+    });
   };
 
   const handleDeleteProducto = async (id: string) => {
@@ -91,21 +94,21 @@ export default function Mercaderia() {
       p.marca.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalValorizado = productos.reduce(
-    (sum, p) => sum + p.costo_unitario * (p.id ? 1 : 0),
-    0
-  );
+  const totalValorizado = productos.reduce((sum, p) => sum + p.costo_unitario, 0);
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
-          Mercadería
-        </h1>
-        <div className="flex gap-3">
-          <button className="btn-secondary">📥 Descargar Stock</button>
-          <button onClick={handleAddProducto} className="btn-primary">
-            ➕ Nuevo Producto
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Mercadería</h1>
+        <div className="flex flex-wrap gap-3">
+          <button className="btn-secondary" onClick={() => descargarCsvStock(productos)}>
+            📥 Descargar Stock
+          </button>
+          <button className="btn-secondary" onClick={() => setShowDolarForm(true)}>
+            💱 Actualizar por Dólar
+          </button>
+          <button onClick={() => setShowCompraForm(true)} className="btn-primary">
+            ➕ Nueva Compra
           </button>
         </div>
       </div>
@@ -125,25 +128,17 @@ export default function Mercaderia() {
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="card">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            Total Productos
-          </p>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">
-            {productos.length}
-          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Productos</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">{productos.length}</p>
         </div>
         <div className="card">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            Valorizado Estimado
-          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Valorizado Estimado</p>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             ${totalValorizado.toFixed(2)}
           </p>
         </div>
         <div className="card">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            Sucursal
-          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Sucursal</p>
           <p className="text-xl font-semibold text-kam-gold">
             {sucursal?.nombre || 'No seleccionada'}
           </p>
@@ -174,14 +169,31 @@ export default function Mercaderia() {
         />
       </div>
 
-      {/* Form Modal */}
-      {showForm && (
-        <ProductoForm
-          producto={editingProducto || undefined}
+      {showCompraForm && (
+        <CompraForm
           categorias={categorias}
-          onSubmit={handleFormSubmit}
-          onCancel={() => setShowForm(false)}
-          isLoading={isCreating || isUpdating}
+          onSubmit={handleCompraSubmit}
+          onCancel={() => setShowCompraForm(false)}
+          isLoading={isCreandoCompra}
+        />
+      )}
+
+      {showEditForm && editingProducto && (
+        <ProductoForm
+          producto={editingProducto}
+          categorias={categorias}
+          onSubmit={handleEditSubmit}
+          onCancel={() => setShowEditForm(false)}
+          isLoading={isUpdating}
+        />
+      )}
+
+      {showDolarForm && (
+        <ActualizarCostoDolarForm
+          categorias={categorias}
+          onSubmit={handleDolarSubmit}
+          onCancel={() => setShowDolarForm(false)}
+          isLoading={isActualizandoCostos}
         />
       )}
     </div>
