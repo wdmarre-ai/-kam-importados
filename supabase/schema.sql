@@ -229,9 +229,6 @@ CREATE INDEX idx_gastos_sucursal ON gastos(sucursal_id);
 CREATE INDEX idx_gastos_fecha ON gastos(fecha);
 CREATE INDEX idx_perfiles_user ON perfiles(user_id);
 
--- MODIFICADORES DE TIMESTAMP
-SELECT cron.schedule('update-sucursales-timestamp', '* * * * *', 'SELECT 1'); -- Dummy cron for moddatetime
-
 -- ROW LEVEL SECURITY (RLS)
 ALTER TABLE sucursales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE perfiles ENABLE ROW LEVEL SECURITY;
