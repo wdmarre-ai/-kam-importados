@@ -7,6 +7,7 @@ import ProductoForm from '../components/InventoryTable/ProductoForm';
 import ProductoTable from '../components/InventoryTable/ProductoTable';
 import CompraForm from '../components/InventoryTable/CompraForm';
 import ActualizarCostoDolarForm from '../components/InventoryTable/ActualizarCostoDolarForm';
+import CategoriasForm from '../components/InventoryTable/CategoriasForm';
 import { descargarCsvStock } from '../../services/exportStock';
 import type { Producto } from '../../domain/tipos';
 
@@ -14,12 +15,21 @@ export default function Mercaderia() {
   const sucursal = useStore((s) => s.sucursal);
   const { productos, isLoading, isUpdating, update, actualizarCostosPorCategoria, isActualizandoCostos } =
     useProductos();
-  const { categorias } = useCategorias();
+  const {
+    categorias,
+    crear: crearCategoria,
+    renombrar: renombrarCategoria,
+    eliminar: eliminarCategoria,
+    isCreando: isCreandoCategoria,
+    isRenombrando: isRenombrandoCategoria,
+    isEliminando: isEliminandoCategoria,
+  } = useCategorias();
   const { createCompraCompleta, isCreating: isCreandoCompra } = useCompras();
 
   const [showCompraForm, setShowCompraForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDolarForm, setShowDolarForm] = useState(false);
+  const [showCategoriasForm, setShowCategoriasForm] = useState(false);
   const [editingProducto, setEditingProducto] = useState<Producto | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -106,6 +116,9 @@ export default function Mercaderia() {
           </button>
           <button className="btn-secondary" onClick={() => setShowDolarForm(true)}>
             💱 Actualizar por Dólar
+          </button>
+          <button className="btn-secondary" onClick={() => setShowCategoriasForm(true)}>
+            🏷️ Categorías
           </button>
           <button onClick={() => setShowCompraForm(true)} className="btn-primary">
             ➕ Nueva Compra
@@ -194,6 +207,17 @@ export default function Mercaderia() {
           onSubmit={handleDolarSubmit}
           onCancel={() => setShowDolarForm(false)}
           isLoading={isActualizandoCostos}
+        />
+      )}
+
+      {showCategoriasForm && (
+        <CategoriasForm
+          categorias={categorias}
+          onCrear={crearCategoria}
+          onRenombrar={renombrarCategoria}
+          onEliminar={eliminarCategoria}
+          onCerrar={() => setShowCategoriasForm(false)}
+          isLoading={isCreandoCategoria || isRenombrandoCategoria || isEliminandoCategoria}
         />
       )}
     </div>

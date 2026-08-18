@@ -112,6 +112,14 @@ DROP POLICY IF EXISTS "usuarios_pueden_crear_categorias" ON categorias;
 CREATE POLICY "usuarios_pueden_crear_categorias" ON categorias FOR INSERT
   WITH CHECK (mi_sucursal_id() IS NOT NULL OR es_admin());
 
+DROP POLICY IF EXISTS "usuarios_pueden_editar_categorias" ON categorias;
+CREATE POLICY "usuarios_pueden_editar_categorias" ON categorias FOR UPDATE
+  USING (mi_sucursal_id() IS NOT NULL OR es_admin());
+
+DROP POLICY IF EXISTS "usuarios_pueden_eliminar_categorias" ON categorias;
+CREATE POLICY "usuarios_pueden_eliminar_categorias" ON categorias FOR DELETE
+  USING (mi_sucursal_id() IS NOT NULL OR es_admin());
+
 -- COMPRAS
 DROP POLICY IF EXISTS "usuarios_pueden_crear_compras" ON compras;
 CREATE POLICY "usuarios_pueden_crear_compras" ON compras FOR INSERT
