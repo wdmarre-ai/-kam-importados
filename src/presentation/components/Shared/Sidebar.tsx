@@ -71,10 +71,10 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Toggle button for mobile */}
+      {/* Botón para mostrar/ocultar el menú, disponible en cualquier tamaño de pantalla */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg bg-kam-gold text-white shadow-lg font-semibold text-base"
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg bg-kam-gold text-white shadow-lg font-semibold text-base"
       >
         <span className="text-xl">☰</span>
         Menú
@@ -82,8 +82,8 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 transition-all duration-300 ${
-          isOpen ? 'w-64' : 'w-0 lg:w-64'
+        className={`fixed lg:static inset-y-0 left-0 z-40 min-w-0 flex-shrink-0 transition-[width] duration-300 ${
+          isOpen ? 'w-64' : 'w-0'
         } bg-white dark:bg-kam-dark border-r border-gray-200 dark:border-gray-700 overflow-hidden`}
       >
         <div className="h-full flex flex-col">
