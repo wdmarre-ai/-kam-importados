@@ -52,7 +52,7 @@
 }
 
 #root {
-  @apply min-h-screen flex;
+  @apply min-h-screen w-full flex;
 }
 
 /* Scrollbar styling */

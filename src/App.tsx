@@ -52,7 +52,7 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white dark:bg-kam-dark">
+      <div className="flex w-full items-center justify-center h-screen bg-white dark:bg-kam-dark">
         <div className="text-center">
           <div className="mb-4">
             <div className="w-12 h-12 border-4 border-kam-gold border-t-transparent rounded-full animate-spin mx-auto" />
