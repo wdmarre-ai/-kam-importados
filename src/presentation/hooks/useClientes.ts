@@ -1,10 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { clienteRepo } from '../../data/repo';
 import { useStore } from '../../store';
 
 export function useClientes() {
   const sucursal = useStore((s) => s.sucursal);
-  const queryClient = useQueryClient();
 
   const { data: clientes = [], isLoading } = useQuery({
     queryKey: ['clientes', sucursal?.id],
@@ -12,23 +11,5 @@ export function useClientes() {
     enabled: !!sucursal,
   });
 
-  const createMutation = useMutation({
-    mutationFn: (cliente: any) => clienteRepo.create(cliente),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clientes', sucursal?.id] });
-    },
-  });
-
-  const getOrCreate = async (telefono: string, clienteData: any) => {
-    if (!sucursal) throw new Error('No sucursal');
-    return clienteRepo.getOrCreate(telefono, sucursal.id, clienteData);
-  };
-
-  return {
-    clientes,
-    isLoading,
-    create: createMutation.mutate,
-    getOrCreate,
-    isCreating: createMutation.isPending,
-  };
+  return { clientes, isLoading };
 }

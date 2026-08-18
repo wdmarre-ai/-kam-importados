@@ -85,6 +85,17 @@ export const sucursalRepo = {
       .single();
     return data;
   },
+
+  async update(id: string, updates: any) {
+    const { data, error } = await supabase
+      .from('sucursales')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
 };
 
 // Productos

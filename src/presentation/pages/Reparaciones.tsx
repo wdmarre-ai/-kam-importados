@@ -5,6 +5,7 @@ import ReparacionesTable from '../components/Reparaciones/ReparacionesTable';
 import EntregaForm from '../components/Reparaciones/EntregaForm';
 import ConstanciaReparacion from '../components/Reparaciones/ConstanciaReparacion';
 import { linkWhatsapp, mensajeActualizacionReparacion } from '../../services/notificar';
+import { useStore } from '../../store';
 import type { Reparacion, EstadoReparacion } from '../../domain/tipos';
 
 const hoyISO = () => new Date().toISOString().slice(0, 10);
@@ -15,6 +16,7 @@ const mananaISO = () => {
 };
 
 export default function Reparaciones() {
+  const sucursal = useStore((s) => s.sucursal);
   const { reparaciones, isLoading, crear, isCreando, cambiarEstado, entregarConCobro, isEntregando } =
     useReparaciones();
 
@@ -56,6 +58,7 @@ export default function Reparaciones() {
           // Nunca incluye el pago al técnico: eso es interno del negocio.
           if (reparacionEntregada.cliente?.telefono) {
             const mensaje = mensajeActualizacionReparacion({
+              sucursal,
               remitoId: reparacionEntregada.remito_id,
               estado: 'entregado',
               detalle: `Monto abonado: $${data.montoCobrado.toFixed(2)}. ¡Gracias por confiar en KAM Importados!`,

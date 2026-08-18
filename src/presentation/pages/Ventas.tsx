@@ -4,7 +4,7 @@ import { useProductos } from '../hooks/useProductos';
 import { useStore } from '../../store';
 import POSSearch from '../components/POS/POSSearch';
 import POSCart from '../components/POS/POSCart';
-import { linkWhatsapp, linkEmail } from '../../services/notificar';
+import ReciboVenta from '../components/POS/ReciboVenta';
 import type { TipoCliente, MedioPago } from '../../domain/tipos';
 
 interface CartItem {
@@ -14,22 +14,6 @@ interface CartItem {
   cantidad: number;
   precio: number;
   subtotal: number;
-}
-
-function mensajeComprobante(params: {
-  items: CartItem[];
-  total: number;
-  medioPago: string;
-  infoGarantia?: string;
-}): string {
-  const lineas = [
-    'KAM Importados - Comprobante de compra',
-    ...params.items.map((i) => `• ${i.modelo} x${i.cantidad} — $${i.subtotal.toFixed(2)}`),
-    `Total: $${params.total.toFixed(2)} (${params.medioPago})`,
-  ];
-  if (params.infoGarantia) lineas.push(`Garantía: ${params.infoGarantia}`);
-  lineas.push('¡Gracias por tu compra!');
-  return lineas.join('\n');
 }
 
 export default function Ventas() {
@@ -50,7 +34,16 @@ export default function Ventas() {
   const [clienteEmail, setClienteEmail] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const [linkConfirmacion, setLinkConfirmacion] = useState<{ wa?: string; mail?: string } | null>(null);
+  const [reciboVenta, setReciboVenta] = useState<{
+    items: CartItem[];
+    total: number;
+    costoEnvio: number;
+    medioPago: string;
+    infoGarantia?: string;
+    clienteNombre: string;
+    clienteTelefono?: string;
+    clienteEmail?: string;
+  } | null>(null);
 
   const handleAddToCart = (producto: any) => {
     const stockDisponible = producto.cantidad_stock ?? 0;
@@ -119,7 +112,7 @@ export default function Ventas() {
   const handleCheckout = async () => {
     setErrorMsg('');
     setSuccessMsg('');
-    setLinkConfirmacion(null);
+    setReciboVenta(null);
 
     if (!cartItems.length) {
       setErrorMsg('El carrito está vacío');
@@ -160,17 +153,15 @@ export default function Ventas() {
           const total = result.totalPesos;
           setSuccessMsg(`✅ Venta guardada correctamente. Total: $${total.toFixed(2)}`);
 
-          const mensaje = mensajeComprobante({
+          setReciboVenta({
             items: cartItems,
             total,
+            costoEnvio,
             medioPago,
             infoGarantia: infoGarantia.trim() || undefined,
-          });
-          const telefono = result.cliente?.telefono;
-          const email = result.cliente?.email;
-          setLinkConfirmacion({
-            wa: telefono ? linkWhatsapp(telefono, mensaje) : undefined,
-            mail: email ? linkEmail(email, 'Comprobante de compra - KAM Importados', mensaje) : undefined,
+            clienteNombre: result.cliente?.nombre ?? clienteNombre.trim(),
+            clienteTelefono: result.cliente?.telefono,
+            clienteEmail: result.cliente?.email,
           });
 
           setCartItems([]);
@@ -291,27 +282,6 @@ export default function Ventas() {
               {successMsg}
             </div>
           )}
-          {linkConfirmacion && (linkConfirmacion.wa || linkConfirmacion.mail) && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border border-blue-200 dark:border-blue-800 rounded text-sm space-y-2">
-              <p className="text-blue-700 dark:text-blue-400">Enviar comprobante al cliente</p>
-              <div className="flex flex-wrap gap-2">
-                {linkConfirmacion.wa && (
-                  <a href={linkConfirmacion.wa} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm">
-                    💬 WhatsApp
-                  </a>
-                )}
-                {linkConfirmacion.mail && (
-                  <a href={linkConfirmacion.mail} className="btn-secondary text-sm">
-                    ✉️ Email
-                  </a>
-                )}
-                <button onClick={() => setLinkConfirmacion(null)} className="text-blue-700 dark:text-blue-400 px-2">
-                  ✕
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Datos cliente */}
           <div className="card space-y-3">
             <h3 className="font-semibold text-gray-900 dark:text-white">👤 Datos del Cliente</h3>
@@ -429,6 +399,21 @@ export default function Ventas() {
           />
         </div>
       </div>
+
+      {reciboVenta && (
+        <ReciboVenta
+          sucursal={sucursal}
+          clienteNombre={reciboVenta.clienteNombre}
+          clienteTelefono={reciboVenta.clienteTelefono}
+          clienteEmail={reciboVenta.clienteEmail}
+          items={reciboVenta.items}
+          costoEnvio={reciboVenta.costoEnvio}
+          total={reciboVenta.total}
+          medioPago={reciboVenta.medioPago}
+          infoGarantia={reciboVenta.infoGarantia}
+          onCerrar={() => setReciboVenta(null)}
+        />
+      )}
     </div>
   );
 }

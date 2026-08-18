@@ -1,5 +1,6 @@
 import type { Reparacion } from '../../../domain/tipos';
 import { linkWhatsapp, linkEmail, mensajeIngresoReparacion } from '../../../services/notificar';
+import { useStore } from '../../../store';
 
 interface ConstanciaReparacionProps {
   reparacion: Reparacion;
@@ -7,7 +8,10 @@ interface ConstanciaReparacionProps {
 }
 
 export default function ConstanciaReparacion({ reparacion, onCerrar }: ConstanciaReparacionProps) {
+  const sucursal = useStore((s) => s.sucursal);
+
   const mensaje = mensajeIngresoReparacion({
+    sucursal,
     remitoId: reparacion.remito_id,
     imei: reparacion.imei,
     descripcion: reparacion.descripcion,
@@ -29,8 +33,18 @@ export default function ConstanciaReparacion({ reparacion, onCerrar }: Constanci
 
         <div id="constancia-imprimible" className="p-8 space-y-4 text-gray-900 dark:text-white print:text-black">
           <div className="text-center border-b border-gray-300 dark:border-gray-600 pb-4 mb-4">
-            <h1 className="text-2xl font-bold">KAM Importados</h1>
-            <p className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-600">
+            <h1 className="text-2xl font-bold">{sucursal?.nombre ?? 'KAM Importados'}</h1>
+            {(sucursal?.direccion || sucursal?.ciudad) && (
+              <p className="text-xs text-gray-600 dark:text-gray-400 print:text-gray-600">
+                {[sucursal?.direccion, sucursal?.ciudad].filter(Boolean).join(', ')}
+              </p>
+            )}
+            {sucursal?.telefono && (
+              <p className="text-xs text-gray-600 dark:text-gray-400 print:text-gray-600">
+                Tel: {sucursal.telefono}
+              </p>
+            )}
+            <p className="text-sm text-gray-600 dark:text-gray-400 print:text-gray-600 mt-1">
               Constancia de Recepción de Equipo
             </p>
           </div>

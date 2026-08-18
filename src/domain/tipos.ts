@@ -17,6 +17,8 @@ export interface Sucursal {
   nombre: string;
   direccion: string;
   ciudad: string;
+  telefono?: string;
+  cuit?: string;
   created_at: string;
 }
 
@@ -142,6 +144,7 @@ export interface Reparacion {
   remito_id: string;
   fecha_ingreso: string;
   cliente_id: string;
+  usuario_id?: string | null;
   imei: string;
   descripcion: string;
   color: string;

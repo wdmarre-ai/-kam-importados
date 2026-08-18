@@ -9,6 +9,7 @@ import Ventas from './presentation/pages/Ventas';
 import Reparaciones from './presentation/pages/Reparaciones';
 import Mercaderia from './presentation/pages/Mercaderia';
 import Gastos from './presentation/pages/Gastos';
+import Clientes from './presentation/pages/Clientes';
 import Admin from './presentation/pages/Admin';
 import Sidebar from './presentation/components/Shared/Sidebar';
 
@@ -80,6 +81,7 @@ function App() {
                 <Route path="/reparaciones" element={<Reparaciones />} />
                 <Route path="/mercaderia" element={<Mercaderia />} />
                 <Route path="/gastos" element={<Gastos />} />
+                <Route path="/clientes" element={<Clientes />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

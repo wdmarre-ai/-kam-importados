@@ -54,6 +54,13 @@ export default function Sidebar() {
       icon: '💰',
       color: 'bg-red-500',
     },
+    {
+      id: 'clientes',
+      label: 'Clientes',
+      path: '/clientes',
+      icon: '👥',
+      color: 'bg-teal-500',
+    },
   ];
 
   const handleLogout = async () => {

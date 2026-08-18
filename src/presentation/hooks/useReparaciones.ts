@@ -44,6 +44,7 @@ export function useReparaciones() {
   const crearMutation = useMutation({
     mutationFn: async (input: NuevaReparacionInput) => {
       if (!sucursal) throw new Error('No hay sucursal seleccionada');
+      if (!user) throw new Error('No hay usuario logueado');
 
       const cliente = await clienteRepo.getOrCreate(input.clienteTelefono, sucursal.id, {
         nombre: input.clienteNombre,
@@ -72,6 +73,7 @@ export function useReparaciones() {
         presupuesto: input.presupuesto,
         foto_url: fotoUrl,
         sucursal_id: sucursal.id,
+        usuario_id: user.id,
       });
     },
     onSuccess: invalidar,
