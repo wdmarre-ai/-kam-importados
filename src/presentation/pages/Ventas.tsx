@@ -326,6 +326,22 @@ export default function Ventas() {
             </div>
           </div>
 
+          {/* Carrito: va antes de Envío/Garantía para no tener que scrollear
+              tanto para llegar al botón de cobrar */}
+          <POSCart
+            items={cartItems}
+            tipo={tipoVenta}
+            medioPago={medioPago}
+            precioDolar={precioDolar}
+            costoEnvio={costoEnvio}
+            onRemoveItem={handleRemoveItem}
+            onChangeTipo={setTipoVenta}
+            onChangeMedioPago={setMedioPago}
+            onChangeCantidad={handleChangeCantidad}
+            onCheckout={handleCheckout}
+            isProcessing={isCreating}
+          />
+
           {/* Envío, dólar y garantía */}
           <div className="card space-y-3">
             <h3 className="font-semibold text-gray-900 dark:text-white">📦 Envío y Garantía</h3>
@@ -381,24 +397,6 @@ export default function Ventas() {
               />
               El cliente confirma su conformidad con la compra
             </label>
-          </div>
-
-          {/* Carrito: queda pegado abajo de la pantalla para no tener que
-              scrollear todo el formulario cada vez que hay que cobrar */}
-          <div className="sticky bottom-0 pb-4 -mx-1 px-1 bg-gray-50 dark:bg-gray-900">
-            <POSCart
-              items={cartItems}
-              tipo={tipoVenta}
-              medioPago={medioPago}
-              precioDolar={precioDolar}
-              costoEnvio={costoEnvio}
-              onRemoveItem={handleRemoveItem}
-              onChangeTipo={setTipoVenta}
-              onChangeMedioPago={setMedioPago}
-              onChangeCantidad={handleChangeCantidad}
-              onCheckout={handleCheckout}
-              isProcessing={isCreating}
-            />
           </div>
         </div>
       </div>
