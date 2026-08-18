@@ -28,7 +28,18 @@ export default function Dashboard() {
     ventasPorUsuario,
     participacionMedioPago,
     ventasPorTipo,
+    eliminarVenta,
   } = useGestion(from, to);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleEliminarVenta = (venta: any) => {
+    if (confirm(`¿Eliminar la venta de $${venta.total_pesos.toFixed(2)}? Se repone el stock vendido.`)) {
+      setErrorMsg('');
+      eliminarVenta(venta, {
+        onError: (err: any) => setErrorMsg(`❌ No se pudo eliminar: ${err.message}`),
+      });
+    }
+  };
 
   return (
     <div className="p-8">
@@ -45,6 +56,12 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="p-3 bg-red-50 dark:bg-red-900 dark:bg-opacity-20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm mb-4">
+          {errorMsg}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="text-center py-12 text-gray-500 dark:text-gray-400">Cargando datos del período...</div>
@@ -235,7 +252,8 @@ export default function Dashboard() {
                       <th className="pb-2 pr-4">Cliente</th>
                       <th className="pb-2 pr-4">Medio de pago</th>
                       <th className="pb-2 pr-4">Tipo</th>
-                      <th className="pb-2 text-right">Total</th>
+                      <th className="pb-2 pr-4 text-right">Total</th>
+                      <th className="pb-2 text-right">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -245,8 +263,16 @@ export default function Dashboard() {
                         <td className="py-2 pr-4">{v.cliente?.nombre ?? '—'}</td>
                         <td className="py-2 pr-4">{MEDIO_PAGO_LABEL[v.medio_pago] ?? v.medio_pago}</td>
                         <td className="py-2 pr-4 capitalize">{v.tipo}</td>
-                        <td className="py-2 text-right font-semibold text-gray-900 dark:text-white">
+                        <td className="py-2 pr-4 text-right font-semibold text-gray-900 dark:text-white">
                           ${v.total_pesos.toFixed(2)}
+                        </td>
+                        <td className="py-2 text-right">
+                          <button
+                            onClick={() => handleEliminarVenta(v)}
+                            className="text-red-600 hover:text-red-800 text-sm"
+                          >
+                            🗑
+                          </button>
                         </td>
                       </tr>
                     ))}

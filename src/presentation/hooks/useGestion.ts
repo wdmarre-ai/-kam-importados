@@ -1,10 +1,11 @@
-import { useQuery } from '@tanstack/react-query';
-import { ventaRepo, gastoRepo, compraRepo, productoRepo, perfilRepo } from '../../data/repo';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ventaRepo, gastoRepo, compraRepo, productoRepo, perfilRepo, stockRepo } from '../../data/repo';
 import { useStore } from '../../store';
 
 export function useGestion(from: string, to: string) {
   const sucursal = useStore((s) => s.sucursal);
   const enabled = !!sucursal;
+  const queryClient = useQueryClient();
 
   const { data: ventas = [], isLoading: cargandoVentas } = useQuery({
     queryKey: ['gestion-ventas', sucursal?.id, from, to],
@@ -96,11 +97,31 @@ export function useGestion(from: string, to: string) {
     valorizadoPorCategoria.set(categoria, (valorizadoPorCategoria.get(categoria) ?? 0) + p.costo_unitario);
   }
 
+  const eliminarVentaMutation = useMutation({
+    mutationFn: async (venta: any) => {
+      if (!sucursal) throw new Error('No hay sucursal seleccionada');
+      // Repone el stock de los productos que se habían descontado
+      for (const item of venta.venta_items ?? []) {
+        if (item.producto_id) {
+          await stockRepo.upsertSumando(item.producto_id, sucursal.id, item.cantidad);
+        }
+      }
+      await ventaRepo.delete(venta.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gestion-ventas', sucursal?.id] });
+      queryClient.invalidateQueries({ queryKey: ['ventas', sucursal?.id] });
+      queryClient.invalidateQueries({ queryKey: ['productos', sucursal?.id] });
+    },
+  });
+
   return {
     isLoading,
     ventas,
     gastos,
     compras,
+    eliminarVenta: eliminarVentaMutation.mutate,
+    isEliminandoVenta: eliminarVentaMutation.isPending,
     estadoResultados: { ingresosVentas, costoVentas, gastosOperacionales, margenBruto, gananciaNeta },
     flujoCaja: { entradas, salidas, flujoNeto },
     productoMasVendido,

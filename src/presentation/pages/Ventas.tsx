@@ -383,20 +383,23 @@ export default function Ventas() {
             </label>
           </div>
 
-          {/* Carrito */}
-          <POSCart
-            items={cartItems}
-            tipo={tipoVenta}
-            medioPago={medioPago}
-            precioDolar={precioDolar}
-            costoEnvio={costoEnvio}
-            onRemoveItem={handleRemoveItem}
-            onChangeTipo={setTipoVenta}
-            onChangeMedioPago={setMedioPago}
-            onChangeCantidad={handleChangeCantidad}
-            onCheckout={handleCheckout}
-            isProcessing={isCreating}
-          />
+          {/* Carrito: queda pegado abajo de la pantalla para no tener que
+              scrollear todo el formulario cada vez que hay que cobrar */}
+          <div className="sticky bottom-0 pb-4 -mx-1 px-1 bg-gray-50 dark:bg-gray-900">
+            <POSCart
+              items={cartItems}
+              tipo={tipoVenta}
+              medioPago={medioPago}
+              precioDolar={precioDolar}
+              costoEnvio={costoEnvio}
+              onRemoveItem={handleRemoveItem}
+              onChangeTipo={setTipoVenta}
+              onChangeMedioPago={setMedioPago}
+              onChangeCantidad={handleChangeCantidad}
+              onCheckout={handleCheckout}
+              isProcessing={isCreating}
+            />
+          </div>
         </div>
       </div>
 

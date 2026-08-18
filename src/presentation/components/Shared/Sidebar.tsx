@@ -74,9 +74,10 @@ export default function Sidebar() {
       {/* Toggle button for mobile */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-kam-gold text-white"
+        className="lg:hidden fixed top-4 left-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg bg-kam-gold text-white shadow-lg font-semibold text-base"
       >
-        ☰
+        <span className="text-xl">☰</span>
+        Menú
       </button>
 
       {/* Sidebar */}
