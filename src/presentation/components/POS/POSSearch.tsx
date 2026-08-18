@@ -2,32 +2,53 @@ import { useState } from 'react';
 import type { Producto } from '../../../domain/tipos';
 
 interface POSSearchProps {
+  productos: Producto[];
   onProductoFound: (producto: Producto) => void;
   isSearching?: boolean;
 }
 
-export default function POSSearch({ onProductoFound: _onProductoFound, isSearching = false }: POSSearchProps) {
+export default function POSSearch({ productos, onProductoFound, isSearching = false }: POSSearchProps) {
   const [searchInput, setSearchInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+  const buscar = () => {
     setErrorMsg('');
+    const termino = searchInput.trim().toLowerCase();
 
-    if (!searchInput.trim()) {
+    if (!termino) {
       setErrorMsg('Ingresá un IMEI o modelo para buscar');
       return;
     }
 
-    // TODO: Implementar búsqueda en Supabase
-    console.log('Buscando:', searchInput);
+    const porImei = productos.find((p) => p.imei.toLowerCase() === termino);
+    if (porImei) {
+      onProductoFound(porImei);
+      setSearchInput('');
+      return;
+    }
+
+    const porModelo = productos.find(
+      (p) => p.modelo.toLowerCase().includes(termino) || p.descripcion.toLowerCase().includes(termino)
+    );
+    if (porModelo) {
+      onProductoFound(porModelo);
+      setSearchInput('');
+      return;
+    }
+
+    setErrorMsg('No se encontró ningún producto con ese IMEI o modelo');
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    buscar();
   };
 
   const handleScannerInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // El scanner emula un teclado, así que Enter después de pegar = scan completo
     if (e.key === 'Enter') {
-      handleSearch(e as any);
-      setSearchInput('');
+      e.preventDefault();
+      buscar();
     }
   };
 

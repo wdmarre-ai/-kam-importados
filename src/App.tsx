@@ -71,7 +71,7 @@ function App() {
             <Route path="*" element={<Navigate to="/login" replace />} />
           </Routes>
         ) : (
-          <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+          <div className="flex w-full h-screen bg-gray-50 dark:bg-gray-900">
             <Sidebar />
             <main className="flex-1 overflow-auto">
               <Routes>

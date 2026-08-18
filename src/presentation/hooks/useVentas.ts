@@ -22,10 +22,23 @@ export function useVentas(from?: string, to?: string) {
       tipo: 'minorista' | 'mayorista';
       medioPago: string;
       precioDolar?: number;
+      costoEnvio?: number;
+      conformidad: boolean;
+      infoGarantia?: string;
     }) => {
       if (!sucursal || !user) throw new Error('No sucursal o usuario');
 
-      const { items, clienteNombre, clienteTelefono, tipo, medioPago, precioDolar } = params;
+      const {
+        items,
+        clienteNombre,
+        clienteTelefono,
+        tipo,
+        medioPago,
+        precioDolar,
+        costoEnvio = 0,
+        conformidad,
+        infoGarantia,
+      } = params;
 
       // 1. Crear o buscar cliente
       const cliente = await clienteRepo.getOrCreate(clienteTelefono, sucursal.id, {
@@ -33,8 +46,8 @@ export function useVentas(from?: string, to?: string) {
         tipo,
       });
 
-      // 2. Calcular totales
-      const totalPesos = items.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+      // 2. Calcular totales (incluye costo de envío si lo hay)
+      const totalPesos = items.reduce((sum, item) => sum + item.precio * item.cantidad, 0) + costoEnvio;
       const totalUsd = precioDolar ? totalPesos / precioDolar : undefined;
 
       // 3. Crear venta
@@ -48,7 +61,8 @@ export function useVentas(from?: string, to?: string) {
         precio_dolar_usado: precioDolar,
         usuario_id: user.id,
         sucursal_id: sucursal.id,
-        conformidad: true,
+        conformidad,
+        info_garantia: infoGarantia || null,
       });
 
       // 4. Crear items de venta
@@ -74,7 +88,7 @@ export function useVentas(from?: string, to?: string) {
         }
       }
 
-      return venta;
+      return { venta, cliente, totalPesos };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ventas', sucursal?.id, from, to] });

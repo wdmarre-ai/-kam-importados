@@ -13,6 +13,7 @@ interface POSCartProps {
   tipo: TipoCliente;
   medioPago: MedioPago;
   precioDolar?: number;
+  costoEnvio?: number;
   onRemoveItem: (productoId: string) => void;
   onChangeTipo: (tipo: TipoCliente) => void;
   onChangeMedioPago: (medio: MedioPago) => void;
@@ -26,6 +27,7 @@ export default function POSCart({
   tipo,
   medioPago,
   precioDolar,
+  costoEnvio = 0,
   onRemoveItem,
   onChangeTipo,
   onChangeMedioPago,
@@ -33,7 +35,8 @@ export default function POSCart({
   onCheckout,
   isProcessing = false,
 }: POSCartProps) {
-  const total = items.reduce((sum, item) => sum + item.subtotal, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
+  const total = subtotal + costoEnvio;
   const totalUsd = precioDolar ? total / precioDolar : 0;
 
   return (
@@ -147,8 +150,18 @@ export default function POSCart({
 
         {/* Total */}
         <div className="bg-kam-gold bg-opacity-10 p-3 rounded-lg border border-kam-gold">
-          <div className="flex justify-between mb-2">
-            <span className="text-sm text-gray-700 dark:text-gray-300">Subtotal</span>
+          <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+            <span>Subtotal productos</span>
+            <span>${subtotal.toFixed(2)}</span>
+          </div>
+          {costoEnvio > 0 && (
+            <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
+              <span>Envío</span>
+              <span>${costoEnvio.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between mb-2 mt-1 pt-1 border-t border-kam-gold border-opacity-30">
+            <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Total</span>
             <span className="font-bold text-gray-900 dark:text-white">
               ${total.toFixed(2)}
             </span>

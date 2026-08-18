@@ -4,6 +4,7 @@ import { useProductos } from '../hooks/useProductos';
 import { useStore } from '../../store';
 import POSSearch from '../components/POS/POSSearch';
 import POSCart from '../components/POS/POSCart';
+import { linkWhatsapp, linkEmail } from '../../services/notificar';
 import type { TipoCliente, MedioPago } from '../../domain/tipos';
 
 interface CartItem {
@@ -15,6 +16,22 @@ interface CartItem {
   subtotal: number;
 }
 
+function mensajeComprobante(params: {
+  items: CartItem[];
+  total: number;
+  medioPago: string;
+  infoGarantia?: string;
+}): string {
+  const lineas = [
+    'KAM Importados - Comprobante de compra',
+    ...params.items.map((i) => `• ${i.modelo} x${i.cantidad} — $${i.subtotal.toFixed(2)}`),
+    `Total: $${params.total.toFixed(2)} (${params.medioPago})`,
+  ];
+  if (params.infoGarantia) lineas.push(`Garantía: ${params.infoGarantia}`);
+  lineas.push('¡Gracias por tu compra!');
+  return lineas.join('\n');
+}
+
 export default function Ventas() {
   const sucursal = useStore((s) => s.sucursal);
   const user = useStore((s) => s.user);
@@ -24,11 +41,15 @@ export default function Ventas() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [tipoVenta, setTipoVenta] = useState<TipoCliente>('minorista');
   const [medioPago, setMedioPago] = useState<MedioPago>('efectivo');
-  const [precioDolar] = useState(900); // TODO: Hacer dinámico
+  const [precioDolar, setPrecioDolar] = useState(900);
+  const [costoEnvio, setCostoEnvio] = useState(0);
+  const [conformidad, setConformidad] = useState(true);
+  const [infoGarantia, setInfoGarantia] = useState('');
   const [clienteNombre, setClienteNombre] = useState('');
   const [clienteTelefono, setClienteTelefono] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [linkConfirmacion, setLinkConfirmacion] = useState<{ wa?: string; mail?: string } | null>(null);
 
   const handleAddToCart = (producto: any) => {
     const existingItem = cartItems.find((item) => item.productoId === producto.id);
@@ -83,22 +104,20 @@ export default function Ventas() {
   const handleCheckout = async () => {
     setErrorMsg('');
     setSuccessMsg('');
+    setLinkConfirmacion(null);
 
     if (!cartItems.length) {
       setErrorMsg('El carrito está vacío');
       return;
     }
-
     if (!clienteNombre.trim()) {
       setErrorMsg('Ingresá el nombre del cliente');
       return;
     }
-
     if (!clienteTelefono.trim()) {
       setErrorMsg('Ingresá el teléfono del cliente');
       return;
     }
-
     if (!user || !sucursal) {
       setErrorMsg('Error: No hay usuario o sucursal seleccionada');
       return;
@@ -116,14 +135,33 @@ export default function Ventas() {
         tipo: tipoVenta,
         medioPago,
         precioDolar,
+        costoEnvio,
+        conformidad,
+        infoGarantia: infoGarantia.trim() || undefined,
       },
       {
-        onSuccess: () => {
-          const total = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
+        onSuccess: (result: any) => {
+          const total = result.totalPesos;
           setSuccessMsg(`✅ Venta guardada correctamente. Total: $${total.toFixed(2)}`);
+
+          const mensaje = mensajeComprobante({
+            items: cartItems,
+            total,
+            medioPago,
+            infoGarantia: infoGarantia.trim() || undefined,
+          });
+          const telefono = result.cliente?.telefono;
+          const email = result.cliente?.email;
+          setLinkConfirmacion({
+            wa: telefono ? linkWhatsapp(telefono, mensaje) : undefined,
+            mail: email ? linkEmail(email, 'Comprobante de compra - KAM Importados', mensaje) : undefined,
+          });
+
           setCartItems([]);
           setClienteNombre('');
           setClienteTelefono('');
+          setCostoEnvio(0);
+          setInfoGarantia('');
           setTimeout(() => setSuccessMsg(''), 3000);
         },
         onError: (err: any) => {
@@ -174,7 +212,7 @@ export default function Ventas() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left: Search */}
         <div className="lg:col-span-2">
-          <POSSearch onProductoFound={handleAddToCart} />
+          <POSSearch productos={productos} onProductoFound={handleAddToCart} />
 
           {/* Productos sugeridos */}
           <div className="mt-6 card">
@@ -229,6 +267,26 @@ export default function Ventas() {
               {successMsg}
             </div>
           )}
+          {linkConfirmacion && (linkConfirmacion.wa || linkConfirmacion.mail) && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-900 dark:bg-opacity-20 border border-blue-200 dark:border-blue-800 rounded text-sm space-y-2">
+              <p className="text-blue-700 dark:text-blue-400">Enviar comprobante al cliente</p>
+              <div className="flex flex-wrap gap-2">
+                {linkConfirmacion.wa && (
+                  <a href={linkConfirmacion.wa} target="_blank" rel="noopener noreferrer" className="btn-secondary text-sm">
+                    💬 WhatsApp
+                  </a>
+                )}
+                {linkConfirmacion.mail && (
+                  <a href={linkConfirmacion.mail} className="btn-secondary text-sm">
+                    ✉️ Email
+                  </a>
+                )}
+                <button onClick={() => setLinkConfirmacion(null)} className="text-blue-700 dark:text-blue-400 px-2">
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Datos cliente */}
           <div className="card space-y-3">
@@ -243,7 +301,7 @@ export default function Ventas() {
                 onChange={(e) => setClienteNombre(e.target.value)}
                 className="input-field w-full text-sm"
                 placeholder="Nombre del cliente"
-                disabled={isCreating || isCreating}
+                disabled={isCreating}
               />
             </div>
             <div>
@@ -256,9 +314,66 @@ export default function Ventas() {
                 onChange={(e) => setClienteTelefono(e.target.value)}
                 className="input-field w-full text-sm"
                 placeholder="+54 9 1234567890"
-                disabled={isCreating || isCreating}
+                disabled={isCreating}
               />
             </div>
+          </div>
+
+          {/* Envío, dólar y garantía */}
+          <div className="card space-y-3">
+            <h3 className="font-semibold text-gray-900 dark:text-white">📦 Envío y Garantía</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Costo de envío
+                </label>
+                <input
+                  type="number"
+                  value={costoEnvio || ''}
+                  onChange={(e) => setCostoEnvio(parseFloat(e.target.value) || 0)}
+                  className="input-field w-full text-sm"
+                  min="0"
+                  step="0.01"
+                  disabled={isCreating}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Dólar del día
+                </label>
+                <input
+                  type="number"
+                  value={precioDolar || ''}
+                  onChange={(e) => setPrecioDolar(parseFloat(e.target.value) || 0)}
+                  className="input-field w-full text-sm"
+                  min="0"
+                  step="0.01"
+                  disabled={isCreating}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Información de garantía
+              </label>
+              <input
+                type="text"
+                value={infoGarantia}
+                onChange={(e) => setInfoGarantia(e.target.value)}
+                className="input-field w-full text-sm"
+                placeholder="Ej: 3 meses de garantía por escrito"
+                disabled={isCreating}
+              />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+              <input
+                type="checkbox"
+                checked={conformidad}
+                onChange={(e) => setConformidad(e.target.checked)}
+                disabled={isCreating}
+              />
+              El cliente confirma su conformidad con la compra
+            </label>
           </div>
 
           {/* Carrito */}
@@ -267,6 +382,7 @@ export default function Ventas() {
             tipo={tipoVenta}
             medioPago={medioPago}
             precioDolar={precioDolar}
+            costoEnvio={costoEnvio}
             onRemoveItem={handleRemoveItem}
             onChangeTipo={setTipoVenta}
             onChangeMedioPago={setMedioPago}
