@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useProductos } from '../hooks/useProductos';
 import { useCompras } from '../hooks/useCompras';
 import { useCategorias } from '../hooks/useCategorias';
@@ -139,7 +140,7 @@ export default function Mercaderia() {
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="card">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Productos</p>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">{productos.length}</p>
@@ -149,6 +150,15 @@ export default function Mercaderia() {
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             ${totalValorizado.toFixed(2)}
           </p>
+        </div>
+        <div className="card">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Cotización del Dólar</p>
+          <p className="text-3xl font-bold text-gray-900 dark:text-white">
+            {sucursal?.cotizacion_dolar_actual ? `$${sucursal.cotizacion_dolar_actual.toFixed(2)}` : '—'}
+          </p>
+          <Link to="/admin" className="text-xs text-kam-gold hover:underline">
+            Editar en Administración
+          </Link>
         </div>
         <div className="card">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Sucursal</p>
