@@ -92,10 +92,10 @@ export const productoRepo = {
   async getAll(sucursalId: string) {
     const { data } = await supabase
       .from('productos')
-      .select('*')
+      .select('*, stock(cantidad)')
       .eq('sucursal_id', sucursalId)
       .eq('estado', 'en_stock');
-    return data ?? [];
+    return (data ?? []).map((p: any) => ({ ...p, cantidad_stock: p.stock?.[0]?.cantidad ?? 0 }));
   },
 
   async getByImei(imei: string, sucursalId: string) {
@@ -323,6 +323,17 @@ export const clienteRepo = {
     return data;
   },
 
+  async update(id: string, updates: any) {
+    const { data, error } = await supabase
+      .from('clientes')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
   async getOrCreate(telefono: string, sucursalId: string, clienteData: any) {
     try {
       const existing = await this.getByTelefono(telefono, sucursalId);
@@ -462,6 +473,11 @@ export const gastoRepo = {
 
     const { data } = await query;
     return data ?? [];
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase.from('gastos').delete().eq('id', id);
+    if (error) throw error;
   },
 };
 

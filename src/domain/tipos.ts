@@ -40,6 +40,7 @@ export interface Producto {
   sucursal_id: string;
   created_at: string;
   updated_at: string;
+  cantidad_stock?: number;
 }
 
 export interface Categoria {

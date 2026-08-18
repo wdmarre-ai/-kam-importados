@@ -19,6 +19,7 @@ export function useVentas(from?: string, to?: string) {
       items: Array<{ productoId: string; precio: number; cantidad: number }>;
       clienteNombre: string;
       clienteTelefono: string;
+      clienteEmail?: string;
       tipo: 'minorista' | 'mayorista';
       medioPago: string;
       precioDolar?: number;
@@ -32,6 +33,7 @@ export function useVentas(from?: string, to?: string) {
         items,
         clienteNombre,
         clienteTelefono,
+        clienteEmail,
         tipo,
         medioPago,
         precioDolar,
@@ -40,11 +42,25 @@ export function useVentas(from?: string, to?: string) {
         infoGarantia,
       } = params;
 
+      // 0. Validar stock real antes de vender (por si cambió desde que se armó el carrito)
+      for (const item of items) {
+        const stockActual = await stockRepo.getByProductoId(item.productoId, sucursal.id);
+        if (!stockActual || stockActual.cantidad < item.cantidad) {
+          throw new Error(
+            `No hay stock suficiente (disponible: ${stockActual?.cantidad ?? 0}). Actualizá el carrito.`
+          );
+        }
+      }
+
       // 1. Crear o buscar cliente
-      const cliente = await clienteRepo.getOrCreate(clienteTelefono, sucursal.id, {
+      let cliente = await clienteRepo.getOrCreate(clienteTelefono, sucursal.id, {
         nombre: clienteNombre,
         tipo,
+        email: clienteEmail || null,
       });
+      if (clienteEmail && !cliente.email) {
+        cliente = await clienteRepo.update(cliente.id, { email: clienteEmail });
+      }
 
       // 2. Calcular totales (incluye costo de envío si lo hay)
       const totalPesos = items.reduce((sum, item) => sum + item.precio * item.cantidad, 0) + costoEnvio;

@@ -47,14 +47,25 @@ export default function Ventas() {
   const [infoGarantia, setInfoGarantia] = useState('');
   const [clienteNombre, setClienteNombre] = useState('');
   const [clienteTelefono, setClienteTelefono] = useState('');
+  const [clienteEmail, setClienteEmail] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [linkConfirmacion, setLinkConfirmacion] = useState<{ wa?: string; mail?: string } | null>(null);
 
   const handleAddToCart = (producto: any) => {
+    const stockDisponible = producto.cantidad_stock ?? 0;
+    if (stockDisponible <= 0) {
+      setErrorMsg(`${producto.modelo || producto.imei} no tiene stock disponible`);
+      return;
+    }
+
     const existingItem = cartItems.find((item) => item.productoId === producto.id);
 
     if (existingItem) {
+      if (existingItem.cantidad >= stockDisponible) {
+        setErrorMsg(`Solo hay ${stockDisponible} unidad(es) en stock de ${producto.modelo}`);
+        return;
+      }
       setCartItems(
         cartItems.map((item) =>
           item.productoId === producto.id
@@ -88,13 +99,17 @@ export default function Ventas() {
   };
 
   const handleChangeCantidad = (productoId: string, cantidad: number) => {
+    const producto = productos.find((p: any) => p.id === productoId);
+    const stockDisponible = producto?.cantidad_stock ?? 0;
+    const cantidadFinal = Math.min(cantidad, stockDisponible || cantidad);
+
     setCartItems(
       cartItems.map((item) =>
         item.productoId === productoId
           ? {
               ...item,
-              cantidad,
-              subtotal: cantidad * item.precio,
+              cantidad: cantidadFinal,
+              subtotal: cantidadFinal * item.precio,
             }
           : item
       )
@@ -132,6 +147,7 @@ export default function Ventas() {
         })),
         clienteNombre: clienteNombre.trim(),
         clienteTelefono: clienteTelefono.trim(),
+        clienteEmail: clienteEmail.trim() || undefined,
         tipo: tipoVenta,
         medioPago,
         precioDolar,
@@ -160,6 +176,7 @@ export default function Ventas() {
           setCartItems([]);
           setClienteNombre('');
           setClienteTelefono('');
+          setClienteEmail('');
           setCostoEnvio(0);
           setInfoGarantia('');
           setTimeout(() => setSuccessMsg(''), 3000);
@@ -210,8 +227,8 @@ export default function Ventas() {
 
       {/* POS Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Search */}
-        <div className="lg:col-span-2">
+        {/* Left: Search (en mobile va después del carrito, para no obligar a scrollear hasta abajo para cobrar) */}
+        <div className="order-2 lg:order-1 lg:col-span-2">
           <POSSearch productos={productos} onProductoFound={handleAddToCart} />
 
           {/* Productos sugeridos */}
@@ -230,8 +247,8 @@ export default function Ventas() {
                   <button
                     key={p.id}
                     onClick={() => handleAddToCart(p)}
-                    disabled={isCreating}
-                    className="text-left p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-kam-gold dark:hover:border-kam-gold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    disabled={isCreating || (p.cantidad_stock ?? 0) <= 0}
+                    className="text-left p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-kam-gold dark:hover:border-kam-gold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200"
                   >
                     <div className="font-semibold text-sm text-gray-900 dark:text-white">
                       {p.modelo}
@@ -239,9 +256,16 @@ export default function Ventas() {
                     <div className="text-xs text-gray-600 dark:text-gray-400">
                       IMEI: {p.imei}
                     </div>
-                    <div className="flex justify-between mt-2">
+                    <div className="flex justify-between mt-2 items-center">
                       <span className="text-xs text-gray-500">
                         🔋 {p.bateria_porcentaje}%
+                      </span>
+                      <span
+                        className={`text-xs font-medium ${
+                          (p.cantidad_stock ?? 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                        }`}
+                      >
+                        {(p.cantidad_stock ?? 0) > 0 ? `Stock: ${p.cantidad_stock}` : 'Sin stock'}
                       </span>
                       <span className="font-bold text-kam-gold">
                         ${p.precio_minorista.toFixed(2)}
@@ -255,7 +279,7 @@ export default function Ventas() {
         </div>
 
         {/* Right: Cart */}
-        <div className="space-y-4">
+        <div className="order-1 lg:order-2 space-y-4">
           {/* Mensajes */}
           {errorMsg && (
             <div className="p-3 bg-red-50 dark:bg-red-900 dark:bg-opacity-20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm">
@@ -314,6 +338,19 @@ export default function Ventas() {
                 onChange={(e) => setClienteTelefono(e.target.value)}
                 className="input-field w-full text-sm"
                 placeholder="+54 9 1234567890"
+                disabled={isCreating}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Email (opcional)
+              </label>
+              <input
+                type="email"
+                value={clienteEmail}
+                onChange={(e) => setClienteEmail(e.target.value)}
+                className="input-field w-full text-sm"
+                placeholder="cliente@ejemplo.com"
                 disabled={isCreating}
               />
             </div>

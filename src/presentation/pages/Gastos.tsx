@@ -16,7 +16,7 @@ export default function Gastos() {
   const inicioMes = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-01`;
   const finMes = hoy.toISOString().slice(0, 10);
 
-  const { gastos, isLoading, crear, isCreando } = useGastos(inicioMes, finMes);
+  const { gastos, isLoading, crear, isCreando, eliminar } = useGastos(inicioMes, finMes);
   const [showForm, setShowForm] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -31,6 +31,19 @@ export default function Gastos() {
       },
       onError: (err: any) => setErrorMsg(`❌ Error: ${err.message}`),
     });
+  };
+
+  const handleEliminar = (id: string, descripcion: string) => {
+    if (confirm(`¿Eliminar el gasto "${descripcion}"?`)) {
+      setErrorMsg('');
+      eliminar(id, {
+        onSuccess: () => {
+          setSuccessMsg('✅ Gasto eliminado');
+          setTimeout(() => setSuccessMsg(''), 2000);
+        },
+        onError: (err: any) => setErrorMsg(`❌ Error al eliminar: ${err.message}`),
+      });
+    }
   };
 
   const totalMes = gastos.reduce((sum, g) => sum + g.monto, 0);
@@ -100,7 +113,8 @@ export default function Gastos() {
                   <th className="pb-2 pr-4">Fecha</th>
                   <th className="pb-2 pr-4">Categoría</th>
                   <th className="pb-2 pr-4">Descripción</th>
-                  <th className="pb-2 text-right">Monto</th>
+                  <th className="pb-2 pr-4 text-right">Monto</th>
+                  <th className="pb-2 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -109,8 +123,16 @@ export default function Gastos() {
                     <td className="py-2 pr-4">{g.fecha}</td>
                     <td className="py-2 pr-4">{CATEGORIA_LABEL[g.categoria as CategoriaGasto]}</td>
                     <td className="py-2 pr-4">{g.descripcion}</td>
-                    <td className="py-2 text-right font-semibold text-red-600 dark:text-red-400">
+                    <td className="py-2 pr-4 text-right font-semibold text-red-600 dark:text-red-400">
                       -${g.monto.toFixed(2)}
+                    </td>
+                    <td className="py-2 text-right">
+                      <button
+                        onClick={() => handleEliminar(g.id, g.descripcion)}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        🗑
+                      </button>
                     </td>
                   </tr>
                 ))}

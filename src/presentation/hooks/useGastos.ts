@@ -24,10 +24,19 @@ export function useGastos(from?: string, to?: string) {
     },
   });
 
+  const eliminarMutation = useMutation({
+    mutationFn: (id: string) => gastoRepo.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gastos', sucursal?.id] });
+    },
+  });
+
   return {
     gastos,
     isLoading,
     crear: crearMutation.mutate,
     isCreando: crearMutation.isPending,
+    eliminar: eliminarMutation.mutate,
+    isEliminando: eliminarMutation.isPending,
   };
 }
