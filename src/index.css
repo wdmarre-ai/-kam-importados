@@ -55,6 +55,31 @@
   @apply min-h-screen w-full flex;
 }
 
+/* Al imprimir (comprobante de venta / constancia de reparación), solo se
+   ve el contenido marcado como imprimible: el resto de la pantalla
+   (sidebar, fondo, otros elementos del modal) queda oculto, para que el
+   PDF sea del comprobante y no una captura de toda la pantalla. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #recibo-imprimible,
+  #recibo-imprimible *,
+  #constancia-imprimible,
+  #constancia-imprimible * {
+    visibility: visible;
+  }
+
+  #recibo-imprimible,
+  #constancia-imprimible {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
