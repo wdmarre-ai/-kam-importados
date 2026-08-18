@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Sucursal } from '../../../domain/tipos';
-import { linkWhatsapp, linkEmail, mensajeComprobanteVenta } from '../../../services/notificar';
+import { linkWhatsapp, linkEmail, linkGmail, mensajeComprobanteVenta } from '../../../services/notificar';
 import { descargarComoImagen } from '../../../services/comprobanteImagen';
 
 interface ItemRecibo {
@@ -83,6 +83,9 @@ export default function ReciboVenta({
           className="p-8 space-y-4 text-gray-900 dark:text-white print:text-black overflow-y-auto bg-white dark:bg-gray-800"
         >
           <div className="text-center border-b border-gray-300 dark:border-gray-600 pb-4 mb-4">
+            {sucursal?.logo_url && (
+              <img src={sucursal.logo_url} alt="Logo" className="w-16 h-16 object-contain mx-auto mb-2" />
+            )}
             <h1 className="text-2xl font-bold">{sucursal?.nombre ?? 'KAM Importados'}</h1>
             {(sucursal?.direccion || sucursal?.ciudad) && (
               <p className="text-xs text-gray-600 dark:text-gray-400 print:text-gray-600">
@@ -165,9 +168,19 @@ export default function ReciboVenta({
             </a>
           )}
           {clienteEmail && (
-            <a href={linkEmail(clienteEmail, 'Comprobante de compra', mensaje)} className="btn-secondary">
-              ✉️ Email
-            </a>
+            <>
+              <a href={linkEmail(clienteEmail, 'Comprobante de compra', mensaje)} className="btn-secondary">
+                ✉️ Email (app del sistema)
+              </a>
+              <a
+                href={linkGmail(clienteEmail, 'Comprobante de compra', mensaje)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary"
+              >
+                📧 Gmail (navegador)
+              </a>
+            </>
           )}
           <button onClick={handleDescargar} className="btn-secondary" disabled={descargando}>
             {descargando ? 'Generando...' : '🖼️ Descargar Imagen'}

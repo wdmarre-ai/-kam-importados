@@ -19,6 +19,7 @@ export interface Sucursal {
   ciudad: string;
   telefono?: string;
   cuit?: string;
+  logo_url?: string;
   created_at: string;
 }
 

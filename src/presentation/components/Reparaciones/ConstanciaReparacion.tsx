@@ -1,5 +1,5 @@
 import type { Reparacion } from '../../../domain/tipos';
-import { linkWhatsapp, linkEmail, mensajeIngresoReparacion } from '../../../services/notificar';
+import { linkWhatsapp, linkEmail, linkGmail, mensajeIngresoReparacion } from '../../../services/notificar';
 import { useStore } from '../../../store';
 
 interface ConstanciaReparacionProps {
@@ -33,6 +33,9 @@ export default function ConstanciaReparacion({ reparacion, onCerrar }: Constanci
 
         <div id="constancia-imprimible" className="p-8 space-y-4 text-gray-900 dark:text-white print:text-black">
           <div className="text-center border-b border-gray-300 dark:border-gray-600 pb-4 mb-4">
+            {sucursal?.logo_url && (
+              <img src={sucursal.logo_url} alt="Logo" className="w-16 h-16 object-contain mx-auto mb-2" />
+            )}
             <h1 className="text-2xl font-bold">{sucursal?.nombre ?? 'KAM Importados'}</h1>
             {(sucursal?.direccion || sucursal?.ciudad) && (
               <p className="text-xs text-gray-600 dark:text-gray-400 print:text-gray-600">
@@ -122,12 +125,22 @@ export default function ConstanciaReparacion({ reparacion, onCerrar }: Constanci
             </a>
           )}
           {reparacion.cliente?.email && (
-            <a
-              href={linkEmail(reparacion.cliente.email, `Recibo ${reparacion.remito_id} - KAM Importados`, mensaje)}
-              className="btn-secondary"
-            >
-              ✉️ Enviar por Email
-            </a>
+            <>
+              <a
+                href={linkEmail(reparacion.cliente.email, `Recibo ${reparacion.remito_id}`, mensaje)}
+                className="btn-secondary"
+              >
+                ✉️ Email (app del sistema)
+              </a>
+              <a
+                href={linkGmail(reparacion.cliente.email, `Recibo ${reparacion.remito_id}`, mensaje)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary"
+              >
+                📧 Gmail (navegador)
+              </a>
+            </>
           )}
           <button onClick={handleImprimir} className="btn-primary">
             🖨️ Imprimir

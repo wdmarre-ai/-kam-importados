@@ -13,6 +13,16 @@ export function linkEmail(email: string, asunto: string, mensaje: string): strin
   return `mailto:${email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(mensaje)}`;
 }
 
+/**
+ * A diferencia de mailto: (que el sistema operativo redirige a la app de
+ * correo predeterminada, ej. Outlook), este link abre directamente el
+ * compositor web de Gmail en el navegador.
+ */
+export function linkGmail(email: string, asunto: string, mensaje: string): string {
+  const params = new URLSearchParams({ view: 'cm', fs: '1', to: email, su: asunto, body: mensaje });
+  return `https://mail.google.com/mail/?${params.toString()}`;
+}
+
 function encabezadoNegocio(sucursal?: Partial<Sucursal> | null): string[] {
   if (!sucursal?.nombre) return ['KAM Importados'];
   const lineas = [sucursal.nombre];

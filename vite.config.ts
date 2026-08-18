@@ -12,6 +12,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+      },
       includeAssets: ['favicon.ico', 'robots.txt'],
       manifest: {
         name: 'KAM Importados - Gestión',

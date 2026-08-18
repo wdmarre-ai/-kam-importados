@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../../store';
-import { sucursalRepo } from '../../data/repo';
+import { sucursalRepo, storageRepo } from '../../data/repo';
 
 export default function Admin() {
   const sucursal = useStore((s) => s.sucursal);
@@ -11,6 +11,7 @@ export default function Admin() {
   const [ciudad, setCiudad] = useState(sucursal?.ciudad ?? '');
   const [telefono, setTelefono] = useState(sucursal?.telefono ?? '');
   const [cuit, setCuit] = useState(sucursal?.cuit ?? '');
+  const [logo, setLogo] = useState<File | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -21,14 +22,23 @@ export default function Admin() {
     setGuardando(true);
     setErrorMsg('');
     try {
+      let logoUrl = sucursal.logo_url;
+      if (logo) {
+        const path = `${sucursal.id}/logo-${Date.now()}.${logo.name.split('.').pop()}`;
+        await storageRepo.uploadFoto('negocio-logos', path, logo);
+        logoUrl = storageRepo.getPublicUrl('negocio-logos', path);
+      }
+
       const actualizada = await sucursalRepo.update(sucursal.id, {
         nombre,
         direccion,
         ciudad,
         telefono,
         cuit,
+        logo_url: logoUrl,
       });
       setSucursal(actualizada);
+      setLogo(null);
       setSuccessMsg('✅ Datos del negocio actualizados');
       setTimeout(() => setSuccessMsg(''), 2000);
     } catch (err: any) {
@@ -67,6 +77,27 @@ export default function Admin() {
           <p className="text-sm text-gray-500 dark:text-gray-400">Cargando sucursal...</p>
         ) : (
           <form onSubmit={handleGuardar} className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Logo del negocio
+              </label>
+              <div className="flex items-center gap-3">
+                {(logo || sucursal.logo_url) && (
+                  <img
+                    src={logo ? URL.createObjectURL(logo) : sucursal.logo_url}
+                    alt="Logo"
+                    className="w-16 h-16 object-contain border border-gray-200 dark:border-gray-700 rounded-lg bg-white"
+                  />
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setLogo(e.target.files?.[0] ?? null)}
+                  className="input-field w-full text-sm"
+                  disabled={guardando}
+                />
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Nombre del negocio
