@@ -204,6 +204,7 @@ export default function Mercaderia() {
       {showDolarForm && (
         <ActualizarCostoDolarForm
           categorias={categorias}
+          cotizacionActual={sucursal?.cotizacion_dolar_actual}
           onSubmit={handleDolarSubmit}
           onCancel={() => setShowDolarForm(false)}
           isLoading={isActualizandoCostos}

@@ -46,18 +46,30 @@ export const perfilRepo = {
     return data;
   },
 
-  async create(userId: string, nombre: string, rol: string, sucursalId: string) {
-    const { data } = await supabase
+  async create(userId: string, nombre: string, rol: string, sucursalId: string, email?: string) {
+    const { data, error } = await supabase
       .from('perfiles')
-      .insert([{ user_id: userId, nombre, rol, sucursal_id: sucursalId, activo: true }])
+      .insert([{ user_id: userId, nombre, rol, sucursal_id: sucursalId, activo: true, email }])
       .select()
       .single();
+    if (error) throw error;
     return data;
   },
 
   async getAllBySucursal(sucursalId: string) {
     const { data } = await supabase.from('perfiles').select('*').eq('sucursal_id', sucursalId);
     return data ?? [];
+  },
+
+  async update(id: string, updates: any) {
+    const { data, error } = await supabase
+      .from('perfiles')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   },
 };
 

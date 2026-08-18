@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 interface ActualizarCostoDolarFormProps {
   categorias: any[];
+  cotizacionActual?: number;
   onSubmit: (data: { categoriaId: string; factor: number }) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -9,13 +10,14 @@ interface ActualizarCostoDolarFormProps {
 
 export default function ActualizarCostoDolarForm({
   categorias,
+  cotizacionActual,
   onSubmit,
   onCancel,
   isLoading = false,
 }: ActualizarCostoDolarFormProps) {
   const [categoriaId, setCategoriaId] = useState('');
   const [dolarAnterior, setDolarAnterior] = useState(0);
-  const [dolarNuevo, setDolarNuevo] = useState(0);
+  const [dolarNuevo, setDolarNuevo] = useState(cotizacionActual ?? 0);
 
   const factor = dolarAnterior > 0 ? dolarNuevo / dolarAnterior : 1;
 

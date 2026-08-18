@@ -5,6 +5,7 @@ export interface Perfil {
   id: string;
   user_id: string;
   nombre: string;
+  email?: string;
   rol: UserRole;
   sucursal_id: string;
   activo: boolean;
@@ -20,6 +21,7 @@ export interface Sucursal {
   telefono?: string;
   cuit?: string;
   logo_url?: string;
+  cotizacion_dolar_actual?: number;
   created_at: string;
 }
 

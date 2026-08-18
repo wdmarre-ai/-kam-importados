@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useVentas } from '../hooks/useVentas';
 import { useProductos } from '../hooks/useProductos';
 import { useStore } from '../../store';
@@ -25,7 +25,7 @@ export default function Ventas() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [tipoVenta, setTipoVenta] = useState<TipoCliente>('minorista');
   const [medioPago, setMedioPago] = useState<MedioPago>('efectivo');
-  const [precioDolar, setPrecioDolar] = useState(900);
+  const [precioDolar, setPrecioDolar] = useState(0);
   const [costoEnvio, setCostoEnvio] = useState(0);
   const [conformidad, setConformidad] = useState(true);
   const [infoGarantia, setInfoGarantia] = useState('');
@@ -44,6 +44,13 @@ export default function Ventas() {
     clienteTelefono?: string;
     clienteEmail?: string;
   } | null>(null);
+
+  useEffect(() => {
+    if (sucursal?.cotizacion_dolar_actual) {
+      setPrecioDolar(sucursal.cotizacion_dolar_actual);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sucursal?.id]);
 
   const handleAddToCart = (producto: any) => {
     const stockDisponible = producto.cantidad_stock ?? 0;
