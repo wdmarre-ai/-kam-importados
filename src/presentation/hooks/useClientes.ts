@@ -10,11 +10,13 @@ export interface ClienteConCompras {
   tipo: 'minorista' | 'mayorista';
   cantidadCompras: number;
   ultimaCompra: string | null;
+  comprasEnPeriodo: number;
 }
 
-export function useClientes() {
+export function useClientes(from?: string, to?: string) {
   const sucursal = useStore((s) => s.sucursal);
   const queryClient = useQueryClient();
+  const hayPeriodo = !!(from && to);
 
   const { data: clientesBase = [], isLoading: cargandoClientes } = useQuery({
     queryKey: ['clientes', sucursal?.id],
@@ -22,10 +24,18 @@ export function useClientes() {
     enabled: !!sucursal,
   });
 
+  // Todas las compras (histórico) para la frecuencia/semáforo y "última compra"
   const { data: ventas = [], isLoading: cargandoVentas } = useQuery({
     queryKey: ['clientes-ventas', sucursal?.id],
     queryFn: () => (sucursal ? ventaRepo.getAll(sucursal.id) : Promise.resolve([])),
     enabled: !!sucursal,
+  });
+
+  // Solo las compras del período elegido, para la columna "Compras en el período"
+  const { data: ventasPeriodo = [], isLoading: cargandoVentasPeriodo } = useQuery({
+    queryKey: ['clientes-ventas-periodo', sucursal?.id, from, to],
+    queryFn: () => (sucursal ? ventaRepo.getAll(sucursal.id, from, to) : Promise.resolve([])),
+    enabled: !!sucursal && hayPeriodo,
   });
 
   const comprasPorCliente = new Map<string, { cantidad: number; ultima: string }>();
@@ -39,12 +49,18 @@ export function useClientes() {
     }
   }
 
+  const comprasPeriodoPorCliente = new Map<string, number>();
+  for (const v of ventasPeriodo as any[]) {
+    comprasPeriodoPorCliente.set(v.cliente_id, (comprasPeriodoPorCliente.get(v.cliente_id) ?? 0) + 1);
+  }
+
   const clientes: ClienteConCompras[] = (clientesBase as any[]).map((c) => {
     const info = comprasPorCliente.get(c.id);
     return {
       ...c,
       cantidadCompras: info?.cantidad ?? 0,
       ultimaCompra: info?.ultima ?? null,
+      comprasEnPeriodo: comprasPeriodoPorCliente.get(c.id) ?? 0,
     };
   });
 
@@ -57,7 +73,8 @@ export function useClientes() {
 
   return {
     clientes,
-    isLoading: cargandoClientes || cargandoVentas,
+    isLoading: cargandoClientes || cargandoVentas || (hayPeriodo && cargandoVentasPeriodo),
+    hayPeriodo,
     eliminar: eliminarMutation.mutate,
     isEliminando: eliminarMutation.isPending,
   };

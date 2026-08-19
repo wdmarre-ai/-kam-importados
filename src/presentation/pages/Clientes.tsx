@@ -15,9 +15,16 @@ function semaforoFrecuencia(cantidadCompras: number): { color: string; texto: st
 
 export default function Clientes() {
   const sucursal = useStore((s) => s.sucursal);
-  const { clientes, isLoading, eliminar, isEliminando } = useClientes();
   const [busqueda, setBusqueda] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const [soloConComprasEnPeriodo, setSoloConComprasEnPeriodo] = useState(false);
+
+  const { clientes, isLoading, hayPeriodo, eliminar, isEliminando } = useClientes(
+    from || undefined,
+    to || undefined
+  );
 
   const handleEliminar = (id: string, nombre: string, cantidadCompras: number) => {
     if (cantidadCompras > 0) {
@@ -35,16 +42,51 @@ export default function Clientes() {
     }
   };
 
-  const filtrados = clientes.filter(
-    (c) => c.nombre.toLowerCase().includes(busqueda.toLowerCase()) || c.telefono.includes(busqueda)
-  );
+  const filtrados = clientes
+    .filter((c) => c.nombre.toLowerCase().includes(busqueda.toLowerCase()) || c.telefono.includes(busqueda))
+    .filter((c) => !hayPeriodo || !soloConComprasEnPeriodo || c.comprasEnPeriodo > 0);
 
   const minoristas = clientes.filter((c) => c.tipo === 'minorista').length;
   const mayoristas = clientes.filter((c) => c.tipo === 'mayorista').length;
 
   return (
     <div className="p-8">
-      <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-8">Clientes</h1>
+      <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+        <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Clientes</h1>
+        <div className="flex items-end gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Desde</label>
+            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="input-field text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Hasta</label>
+            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="input-field text-sm" />
+          </div>
+          {hayPeriodo && (
+            <button
+              onClick={() => {
+                setFrom('');
+                setTo('');
+                setSoloConComprasEnPeriodo(false);
+              }}
+              className="btn-secondary text-sm"
+            >
+              Limpiar
+            </button>
+          )}
+        </div>
+      </div>
+
+      {hayPeriodo && (
+        <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 mb-4">
+          <input
+            type="checkbox"
+            checked={soloConComprasEnPeriodo}
+            onChange={(e) => setSoloConComprasEnPeriodo(e.target.checked)}
+          />
+          Mostrar solo clientes con compras en el período
+        </label>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="card">
@@ -102,6 +144,7 @@ export default function Clientes() {
                   <th className="pb-2 pr-4">Tipo</th>
                   <th className="pb-2 pr-4">Última compra</th>
                   <th className="pb-2 pr-4">Frecuencia</th>
+                  {hayPeriodo && <th className="pb-2 pr-4">Compras en el período</th>}
                   <th className="pb-2 pr-4">Contacto</th>
                   <th className="pb-2">Acciones</th>
                 </tr>
@@ -128,6 +171,11 @@ export default function Clientes() {
                           </span>
                         )}
                       </td>
+                      {hayPeriodo && (
+                        <td className="py-2 pr-4">
+                          {c.comprasEnPeriodo} compra{c.comprasEnPeriodo === 1 ? '' : 's'}
+                        </td>
+                      )}
                       <td className="py-2 pr-4">
                         <a
                           href={linkWhatsapp(
