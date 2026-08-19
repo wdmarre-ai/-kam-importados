@@ -16,7 +16,7 @@ export function useVentas(from?: string, to?: string) {
 
   const createVentaCompletaMutation = useMutation({
     mutationFn: async (params: {
-      items: Array<{ productoId: string; precio: number; cantidad: number }>;
+      items: Array<{ productoId: string; precio: number; costoUnitario: number; cantidad: number }>;
       clienteNombre: string;
       clienteTelefono: string;
       clienteEmail?: string;
@@ -86,6 +86,7 @@ export function useVentas(from?: string, to?: string) {
         venta_id: venta.id,
         producto_id: item.productoId,
         precio_venta: item.precio,
+        costo_unitario: item.costoUnitario,
         cantidad: item.cantidad,
         subtotal: item.precio * item.cantidad,
       }));

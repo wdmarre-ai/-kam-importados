@@ -13,13 +13,16 @@ interface CartItem {
   modelo: string;
   cantidad: number;
   precio: number;
+  costoUnitario: number;
   subtotal: number;
 }
+
+const hoyISO = () => new Date().toISOString().slice(0, 10);
 
 export default function Ventas() {
   const sucursal = useStore((s) => s.sucursal);
   const user = useStore((s) => s.user);
-  const { ventas, createVentaCompleta, isCreating } = useVentas();
+  const { ventas, createVentaCompleta, isCreating } = useVentas(hoyISO(), hoyISO());
   const { productos } = useProductos();
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -88,6 +91,7 @@ export default function Ventas() {
           modelo: producto.modelo,
           cantidad: 1,
           precio,
+          costoUnitario: producto.costo_unitario ?? 0,
           subtotal: precio,
         },
       ]);
@@ -143,6 +147,7 @@ export default function Ventas() {
         items: cartItems.map((item) => ({
           productoId: item.productoId,
           precio: item.precio,
+          costoUnitario: item.costoUnitario,
           cantidad: item.cantidad,
         })),
         clienteNombre: clienteNombre.trim(),
@@ -186,8 +191,8 @@ export default function Ventas() {
     );
   };
 
-  const totalVentasMes = ventas.reduce((sum, v) => sum + v.total_pesos, 0);
-  const promedioTicket = ventas.length > 0 ? totalVentasMes / ventas.length : 0;
+  const totalVentasHoy = ventas.reduce((sum, v) => sum + v.total_pesos, 0);
+  const promedioTicket = ventas.length > 0 ? totalVentasHoy / ventas.length : 0;
 
   return (
     <div className="p-8">
@@ -199,15 +204,15 @@ export default function Ventas() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="card">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            Ventas del Mes
+            Ventas de Hoy
           </p>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
-            ${totalVentasMes.toFixed(2)}
+            ${totalVentasHoy.toFixed(2)}
           </p>
         </div>
         <div className="card">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            Cantidad de Ventas
+            Cantidad de Ventas (Hoy)
           </p>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             {ventas.length}
@@ -215,7 +220,7 @@ export default function Ventas() {
         </div>
         <div className="card">
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-            Ticket Promedio
+            Ticket Promedio (Hoy)
           </p>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             ${promedioTicket.toFixed(2)}

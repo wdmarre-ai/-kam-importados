@@ -7,8 +7,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        'kam-gold': '#D4A574',
-        'kam-dark': '#1A1A1A',
+        'kam-gold': '#C9A227',
+        'kam-gold-light': '#E4C767',
+        'kam-dark': '#141414',
         'kam-light': '#F5F5F5',
       },
       fontFamily: {

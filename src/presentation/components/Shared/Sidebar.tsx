@@ -17,6 +17,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const logout = useStore((s) => s.logout);
   const perfil = useStore((s) => s.perfil);
+  const sucursal = useStore((s) => s.sucursal);
   const [isOpen, setIsOpen] = useState(true);
 
   const menuItems: MenuItem[] = [
@@ -91,17 +92,26 @@ export default function Sidebar() {
           {/* Header */}
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-kam-gold rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                K
-              </div>
-              <div className="text-left flex-1">
-                <h1 className="font-bold text-gray-900 dark:text-white text-sm">
-                  KAM
-                </h1>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  Importados
-                </p>
-              </div>
+              {sucursal?.logo_url ? (
+                <img
+                  src={sucursal.logo_url}
+                  alt={sucursal.nombre}
+                  className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                />
+              ) : (
+                sucursal?.nombre && (
+                  <div className="w-10 h-10 bg-kam-gold rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                    {sucursal.nombre.charAt(0).toUpperCase()}
+                  </div>
+                )
+              )}
+              {sucursal?.nombre && (
+                <div className="text-left flex-1 min-w-0">
+                  <h1 className="font-bold text-gray-900 dark:text-white text-sm truncate">
+                    {sucursal.nombre}
+                  </h1>
+                </div>
+              )}
             </div>
             {perfil && (
               <div className="text-xs text-gray-600 dark:text-gray-400">

@@ -24,7 +24,7 @@ export function linkGmail(email: string, asunto: string, mensaje: string): strin
 }
 
 function encabezadoNegocio(sucursal?: Partial<Sucursal> | null): string[] {
-  if (!sucursal?.nombre) return ['KAM Importados'];
+  if (!sucursal?.nombre) return [];
   const lineas = [sucursal.nombre];
   const direccion = [sucursal.direccion, sucursal.ciudad].filter(Boolean).join(', ');
   if (direccion) lineas.push(direccion);

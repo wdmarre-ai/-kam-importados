@@ -69,6 +69,13 @@ export function useUsuarios() {
     },
   });
 
+  const eliminarMutation = useMutation({
+    mutationFn: (id: string) => perfilRepo.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['usuarios', sucursal?.id] });
+    },
+  });
+
   return {
     usuarios,
     isLoading,
@@ -77,5 +84,7 @@ export function useUsuarios() {
     crearError: crearMutation.error,
     actualizar: actualizarMutation.mutate,
     isActualizando: actualizarMutation.isPending,
+    eliminar: eliminarMutation.mutate,
+    isEliminando: eliminarMutation.isPending,
   };
 }

@@ -61,7 +61,7 @@ export default function Reparaciones() {
               sucursal,
               remitoId: reparacionEntregada.remito_id,
               estado: 'entregado',
-              detalle: `Monto abonado: $${data.montoCobrado.toFixed(2)}. ¡Gracias por confiar en KAM Importados!`,
+              detalle: `Monto abonado: $${data.montoCobrado.toFixed(2)}. ¡Gracias por confiar en nosotros!`,
             });
             setLinkConfirmacion(linkWhatsapp(reparacionEntregada.cliente.telefono, mensaje));
           }

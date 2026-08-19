@@ -40,15 +40,24 @@ export function useGestion(from: string, to: string) {
   const isLoading = cargandoVentas || cargandoGastos || cargandoCompras;
 
   // Estado de resultados
+  // Costo de Mercadería Vendida real: costo (a valor del momento de la venta)
+  // de los productos que efectivamente se vendieron en el período, no una
+  // aproximación por compras del período.
   const ingresosVentas = ventas.reduce((sum: number, v: any) => sum + v.total_pesos, 0);
-  const costoVentas = compras.reduce((sum: number, c: any) => sum + c.costo_total, 0);
+  const costoVentas = ventas.reduce(
+    (sum: number, v: any) =>
+      sum + (v.venta_items ?? []).reduce((s: number, item: any) => s + item.costo_unitario * item.cantidad, 0),
+    0
+  );
   const gastosOperacionales = gastos.reduce((sum: number, g: any) => sum + g.monto, 0);
   const margenBruto = ingresosVentas - costoVentas;
   const gananciaNeta = margenBruto - gastosOperacionales;
 
-  // Flujo de caja
+  // Flujo de caja: acá sí importa la plata que realmente salió por compras
+  // en el período, sin importar si esa mercadería ya se vendió o no.
+  const comprasDelPeriodo = compras.reduce((sum: number, c: any) => sum + c.costo_total, 0);
   const entradas = ingresosVentas;
-  const salidas = costoVentas + gastosOperacionales;
+  const salidas = comprasDelPeriodo + gastosOperacionales;
   const flujoNeto = entradas - salidas;
 
   // Producto más vendido y ventas por categoría
@@ -56,13 +65,17 @@ export function useGestion(from: string, to: string) {
   const ventasPorCategoria = new Map<string, number>();
   for (const v of ventas as any[]) {
     for (const item of v.venta_items ?? []) {
-      const modelo = item.producto?.modelo ?? 'Sin modelo';
-      cantidadPorProducto.set(modelo, (cantidadPorProducto.get(modelo) ?? 0) + item.cantidad);
+      // El modelo es un campo opcional al cargar el producto; si no se
+      // completó, mostramos la descripción en vez de dejarlo en blanco.
+      const nombre = item.producto?.modelo || item.producto?.descripcion || 'Sin nombre';
+      cantidadPorProducto.set(nombre, (cantidadPorProducto.get(nombre) ?? 0) + item.cantidad);
       const categoria = item.producto?.categoria?.nombre ?? 'Sin categoría';
       ventasPorCategoria.set(categoria, (ventasPorCategoria.get(categoria) ?? 0) + item.subtotal);
     }
   }
-  const productoMasVendido = [...cantidadPorProducto.entries()].sort((a, b) => b[1] - a[1])[0];
+  const productosOrdenados = [...cantidadPorProducto.entries()].sort((a, b) => b[1] - a[1]);
+  const productoMasVendido = productosOrdenados[0];
+  const topProductos = productosOrdenados.slice(0, 5).map(([nombre, cantidad]) => ({ nombre, cantidad }));
   const ventasPorCategoriaArr = [...ventasPorCategoria.entries()].sort((a, b) => b[1] - a[1]);
 
   // Ventas por usuario
@@ -125,6 +138,7 @@ export function useGestion(from: string, to: string) {
     estadoResultados: { ingresosVentas, costoVentas, gastosOperacionales, margenBruto, gananciaNeta },
     flujoCaja: { entradas, salidas, flujoNeto },
     productoMasVendido,
+    topProductos,
     ventasPorCategoria: ventasPorCategoriaArr,
     ventasPorUsuario: [...ventasPorUsuario.entries()],
     participacionMedioPago,

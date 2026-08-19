@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { calcularProrrateoEnvio } from '../../../domain/compras';
+import EscanerCodigo from '../Shared/EscanerCodigo';
 import type { ItemCompraInput } from '../../hooks/useCompras';
 
 interface CompraFormProps {
@@ -28,6 +29,7 @@ export default function CompraForm({ categorias, onSubmit, onCancel, isLoading =
   const [proveedor, setProveedor] = useState('');
   const [costoEnvio, setCostoEnvio] = useState(0);
   const [items, setItems] = useState<ItemCompraInput[]>([{ ...itemVacio }]);
+  const [escaneandoIndex, setEscaneandoIndex] = useState<number | null>(null);
 
   const actualizarItem = (index: number, campo: keyof ItemCompraInput, valor: any) => {
     setItems((prev) =>
@@ -88,7 +90,7 @@ export default function CompraForm({ categorias, onSubmit, onCancel, isLoading =
               </label>
               <input
                 type="number"
-                value={costoEnvio}
+                value={costoEnvio || ''}
                 onChange={(e) => setCostoEnvio(parseFloat(e.target.value) || 0)}
                 className="input-field w-full"
                 step="0.01"
@@ -128,14 +130,26 @@ export default function CompraForm({ categorias, onSubmit, onCancel, isLoading =
                     <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                       IMEI / Código *
                     </label>
-                    <input
-                      type="text"
-                      value={item.imei}
-                      onChange={(e) => actualizarItem(index, 'imei', e.target.value)}
-                      className="input-field w-full text-sm"
-                      required
-                      disabled={isLoading}
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={item.imei}
+                        onChange={(e) => actualizarItem(index, 'imei', e.target.value)}
+                        className="input-field w-full text-sm"
+                        placeholder="Escribí o escaneá"
+                        required
+                        disabled={isLoading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setEscaneandoIndex(index)}
+                        className="btn-secondary px-3 flex-shrink-0"
+                        disabled={isLoading}
+                        title="Escanear con la cámara"
+                      >
+                        📷
+                      </button>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -241,7 +255,7 @@ export default function CompraForm({ categorias, onSubmit, onCancel, isLoading =
                     </label>
                     <input
                       type="number"
-                      value={item.costo_unitario}
+                      value={item.costo_unitario || ''}
                       onChange={(e) => actualizarItem(index, 'costo_unitario', parseFloat(e.target.value) || 0)}
                       className="input-field w-full text-sm"
                       step="0.01"
@@ -256,7 +270,7 @@ export default function CompraForm({ categorias, onSubmit, onCancel, isLoading =
                     </label>
                     <input
                       type="number"
-                      value={item.precio_minorista}
+                      value={item.precio_minorista || ''}
                       onChange={(e) => actualizarItem(index, 'precio_minorista', parseFloat(e.target.value) || 0)}
                       className="input-field w-full text-sm"
                       step="0.01"
@@ -271,7 +285,7 @@ export default function CompraForm({ categorias, onSubmit, onCancel, isLoading =
                     </label>
                     <input
                       type="number"
-                      value={item.precio_mayorista}
+                      value={item.precio_mayorista || ''}
                       onChange={(e) => actualizarItem(index, 'precio_mayorista', parseFloat(e.target.value) || 0)}
                       className="input-field w-full text-sm"
                       step="0.01"
@@ -341,6 +355,16 @@ export default function CompraForm({ categorias, onSubmit, onCancel, isLoading =
           </button>
         </div>
       </div>
+
+      {escaneandoIndex !== null && (
+        <EscanerCodigo
+          onDetectado={(codigo) => {
+            actualizarItem(escaneandoIndex, 'imei', codigo);
+            setEscaneandoIndex(null);
+          }}
+          onCerrar={() => setEscaneandoIndex(null)}
+        />
+      )}
     </div>
   );
 }

@@ -101,6 +101,7 @@ export interface VentaItem {
   venta_id: string;
   producto_id: string;
   precio_venta: number;
+  costo_unitario: number;
   cantidad: number;
   subtotal: number;
 }

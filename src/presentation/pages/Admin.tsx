@@ -22,6 +22,7 @@ export default function Admin() {
     crear: crearUsuario,
     isCreando: creandoUsuario,
     actualizar: actualizarUsuario,
+    eliminar: eliminarUsuario,
   } = useUsuarios();
 
   const [nombre, setNombre] = useState(sucursal?.nombre ?? '');
@@ -84,6 +85,16 @@ export default function Admin() {
 
   const handleCambiarRol = (id: string, rol: UserRole) => {
     actualizarUsuario({ id, updates: { rol } });
+  };
+
+  const handleEliminarUsuario = (id: string, nombreUsuario: string) => {
+    if (
+      confirm(
+        `¿Eliminar el acceso de "${nombreUsuario}"? Deja de poder usar la app. Esto no borra su cuenta de login, solo el acceso.`
+      )
+    ) {
+      eliminarUsuario(id);
+    }
   };
 
   return (
@@ -259,7 +270,8 @@ export default function Admin() {
                   <th className="pb-2 pr-4">Nombre</th>
                   <th className="pb-2 pr-4">Email</th>
                   <th className="pb-2 pr-4">Rol</th>
-                  <th className="pb-2">Activo</th>
+                  <th className="pb-2 pr-4">Activo</th>
+                  <th className="pb-2">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -280,7 +292,7 @@ export default function Admin() {
                         ))}
                       </select>
                     </td>
-                    <td className="py-2">
+                    <td className="py-2 pr-4">
                       <button
                         onClick={() => handleToggleActivo(u.id, u.activo)}
                         className={`text-xs px-2 py-1 rounded-full ${
@@ -290,6 +302,14 @@ export default function Admin() {
                         }`}
                       >
                         {u.activo ? 'Activo' : 'Inactivo'}
+                      </button>
+                    </td>
+                    <td className="py-2">
+                      <button
+                        onClick={() => handleEliminarUsuario(u.id, u.nombre)}
+                        className="text-red-600 hover:text-red-800 text-sm"
+                      >
+                        🗑 Eliminar
                       </button>
                     </td>
                   </tr>

@@ -86,7 +86,7 @@ export default function ReciboVenta({
             {sucursal?.logo_url && (
               <img src={sucursal.logo_url} alt="Logo" className="w-16 h-16 object-contain mx-auto mb-2" />
             )}
-            <h1 className="text-2xl font-bold">{sucursal?.nombre ?? 'KAM Importados'}</h1>
+            {sucursal?.nombre && <h1 className="text-2xl font-bold">{sucursal.nombre}</h1>}
             {(sucursal?.direccion || sucursal?.ciudad) && (
               <p className="text-xs text-gray-600 dark:text-gray-400 print:text-gray-600">
                 {[sucursal?.direccion, sucursal?.ciudad].filter(Boolean).join(', ')}

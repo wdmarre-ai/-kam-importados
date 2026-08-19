@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../../data/repo';
+import { auth, sucursalRepo } from '../../data/repo';
 import { useStore } from '../../store';
 import ImpulsaCredit from '../components/Shared/ImpulsaCredit';
 
@@ -11,6 +11,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [marca, setMarca] = useState<{ nombre: string; logo_url?: string } | null>(null);
+
+  useEffect(() => {
+    sucursalRepo
+      .getAll()
+      .then((lista) => {
+        if (lista[0]) setMarca({ nombre: lista[0].nombre, logo_url: lista[0].logo_url });
+      })
+      .catch(() => {});
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,14 +48,24 @@ export default function LoginPage() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-100 dark:border-gray-700">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="inline-block mb-4">
-              <div className="w-16 h-16 bg-kam-gold bg-opacity-20 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold text-kam-gold">KAM</span>
-              </div>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              KAM Importados
-            </h1>
+            {marca?.logo_url ? (
+              <img
+                src={marca.logo_url}
+                alt={marca.nombre}
+                className="w-16 h-16 rounded-full object-cover mx-auto mb-4"
+              />
+            ) : (
+              !marca?.nombre && (
+                <div className="w-16 h-16 bg-kam-gold bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-2xl font-bold text-kam-gold">?</span>
+                </div>
+              )
+            )}
+            {marca?.nombre && (
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                {marca.nombre}
+              </h1>
+            )}
             <p className="text-gray-600 dark:text-gray-400">
               Sistema de Gestión
             </p>
@@ -105,9 +125,11 @@ export default function LoginPage() {
         </div>
 
         {/* Brand */}
-        <div className="text-center mt-8 text-gray-600 dark:text-gray-400 text-sm">
-          <p>© 2026 KAM Importados. Todos los derechos reservados.</p>
-        </div>
+        {marca?.nombre && (
+          <div className="text-center mt-8 text-gray-600 dark:text-gray-400 text-sm">
+            <p>© {new Date().getFullYear()} {marca.nombre}. Todos los derechos reservados.</p>
+          </div>
+        )}
 
         <div className="flex justify-center mt-6">
           <ImpulsaCredit />

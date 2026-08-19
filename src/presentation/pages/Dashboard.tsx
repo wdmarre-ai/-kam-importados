@@ -1,4 +1,17 @@
 import { useState } from 'react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+} from 'recharts';
 import { useGestion } from '../hooks/useGestion';
 
 const MEDIO_PAGO_LABEL: Record<string, string> = {
@@ -8,6 +21,17 @@ const MEDIO_PAGO_LABEL: Record<string, string> = {
   transferencia: 'Transferencia',
   otro: 'Otro',
 };
+
+const PALETA = ['#D4A574', '#2563EB', '#16A34A', '#DC2626', '#7C3AED', '#0891B2'];
+const EJE_COLOR = '#9CA3AF';
+
+function MensajeSinDatos() {
+  return (
+    <div className="h-56 flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
+      Sin datos en el período
+    </div>
+  );
+}
 
 function inicioDeMes(): string {
   const hoy = new Date();
@@ -23,7 +47,7 @@ export default function Dashboard() {
     ventas,
     estadoResultados,
     flujoCaja,
-    productoMasVendido,
+    topProductos,
     ventasPorCategoria,
     ventasPorUsuario,
     participacionMedioPago,
@@ -80,7 +104,7 @@ export default function Dashboard() {
                 </p>
               </div>
               <div>
-                <p className="text-gray-600 dark:text-gray-400">Costo de mercadería</p>
+                <p className="text-gray-600 dark:text-gray-400">Costo de Mercadería Vendida</p>
                 <p className="text-xl font-bold text-red-600 dark:text-red-400">
                   -${estadoResultados.costoVentas.toFixed(2)}
                 </p>
@@ -109,7 +133,7 @@ export default function Dashboard() {
               </div>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-              Costo de mercadería estimado a partir de las compras del período (aproximación).
+              Costo real de los productos vendidos en el período (a su costo del momento de la venta).
             </p>
           </section>
 
@@ -145,89 +169,155 @@ export default function Dashboard() {
           {/* Dashboard de Ventas */}
           <section>
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">📈 Dashboard de Ventas</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="card">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Producto más vendido</h3>
-                {productoMasVendido ? (
-                  <p className="text-sm">
-                    <span className="font-bold text-kam-gold">{productoMasVendido[0]}</span> —{' '}
-                    {productoMasVendido[1]} unidades
-                  </p>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Top Productos Vendidos</h3>
+                {topProductos.length === 0 ? (
+                  <MensajeSinDatos />
                 ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Sin ventas en el período</p>
+                  <ResponsiveContainer width="100%" height={224}>
+                    <BarChart data={topProductos} layout="vertical" margin={{ left: 8, right: 16 }}>
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
+                      <XAxis type="number" allowDecimals={false} tick={{ fill: EJE_COLOR, fontSize: 12 }} />
+                      <YAxis
+                        type="category"
+                        dataKey="nombre"
+                        width={110}
+                        tick={{ fill: EJE_COLOR, fontSize: 12 }}
+                      />
+                      <Tooltip
+                        formatter={(value: any) => [`${value} unidades`, "Vendidas"]}
+                        contentStyle={{ fontSize: 13 }}
+                      />
+                      <Bar dataKey="cantidad" fill={PALETA[0]} radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 )}
               </div>
 
               <div className="card">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Ventas por categoría</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Ventas por Categoría</h3>
                 {ventasPorCategoria.length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Sin datos</p>
+                  <MensajeSinDatos />
                 ) : (
-                  <div className="space-y-1">
-                    {ventasPorCategoria.map(([cat, monto]) => (
-                      <div key={cat} className="flex justify-between text-sm">
-                        <span className="text-gray-700 dark:text-gray-300">{cat}</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">${monto.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <ResponsiveContainer width="100%" height={224}>
+                    <PieChart>
+                      <Pie
+                        data={ventasPorCategoria.map(([nombre, monto]) => ({ nombre, monto }))}
+                        dataKey="monto"
+                        nameKey="nombre"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={2}
+                      >
+                        {ventasPorCategoria.map((_, i) => (
+                          <Cell key={i} fill={PALETA[i % PALETA.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: any) => `$${Number(value).toFixed(2)}`} contentStyle={{ fontSize: 13 }} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
                 )}
               </div>
 
               <div className="card">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Ventas por usuario</h3>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Ventas por Usuario</h3>
                 {ventasPorUsuario.length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Sin datos</p>
+                  <MensajeSinDatos />
                 ) : (
-                  <div className="space-y-1">
-                    {ventasPorUsuario.map(([nombre, monto]) => (
-                      <div key={nombre} className="flex justify-between text-sm">
-                        <span className="text-gray-700 dark:text-gray-300">{nombre}</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">${monto.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <ResponsiveContainer width="100%" height={224}>
+                    <BarChart
+                      data={ventasPorUsuario.map(([nombre, monto]) => ({ nombre, monto }))}
+                      layout="vertical"
+                      margin={{ left: 8, right: 16 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
+                      <XAxis type="number" tick={{ fill: EJE_COLOR, fontSize: 12 }} />
+                      <YAxis
+                        type="category"
+                        dataKey="nombre"
+                        width={110}
+                        tick={{ fill: EJE_COLOR, fontSize: 12 }}
+                      />
+                      <Tooltip formatter={(value: any) => `$${Number(value).toFixed(2)}`} contentStyle={{ fontSize: 13 }} />
+                      <Bar dataKey="monto" fill={PALETA[1]} radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
                 )}
               </div>
 
               <div className="card">
                 <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Minorista vs Mayorista</h3>
                 {ventasPorTipo.length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Sin datos</p>
+                  <MensajeSinDatos />
                 ) : (
-                  <div className="space-y-1">
-                    {ventasPorTipo.map(([tipo, monto]) => (
-                      <div key={tipo} className="flex justify-between text-sm">
-                        <span className="text-gray-700 dark:text-gray-300 capitalize">{tipo}</span>
-                        <span className="font-semibold text-gray-900 dark:text-white">${monto.toFixed(2)}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <ResponsiveContainer width="100%" height={224}>
+                    <PieChart>
+                      <Pie
+                        data={ventasPorTipo.map(([tipo, monto]) => ({
+                          tipo: tipo === 'minorista' ? 'Minorista' : 'Mayorista',
+                          monto,
+                        }))}
+                        dataKey="monto"
+                        nameKey="tipo"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={2}
+                      >
+                        {ventasPorTipo.map((_, i) => (
+                          <Cell key={i} fill={PALETA[i % PALETA.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: any) => `$${Number(value).toFixed(2)}`} contentStyle={{ fontSize: 13 }} />
+                      <Legend wrapperStyle={{ fontSize: 12 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
                 )}
               </div>
 
-              <div className="card md:col-span-2">
-                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Participación por medio de pago</h3>
+              <div className="card lg:col-span-2">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Participación por Medio de Pago</h3>
                 {participacionMedioPago.length === 0 ? (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Sin datos</p>
+                  <MensajeSinDatos />
                 ) : (
-                  <div className="space-y-2">
-                    {participacionMedioPago.map(({ medio, monto, porcentaje }) => (
-                      <div key={medio}>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span className="text-gray-700 dark:text-gray-300">{MEDIO_PAGO_LABEL[medio] ?? medio}</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                    <ResponsiveContainer width="100%" height={224}>
+                      <PieChart>
+                        <Pie
+                          data={participacionMedioPago.map(({ medio, monto }) => ({
+                            medio: MEDIO_PAGO_LABEL[medio] ?? medio,
+                            monto,
+                          }))}
+                          dataKey="monto"
+                          nameKey="medio"
+                          innerRadius={50}
+                          outerRadius={80}
+                          paddingAngle={2}
+                        >
+                          {participacionMedioPago.map((_, i) => (
+                            <Cell key={i} fill={PALETA[i % PALETA.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: any) => `$${Number(value).toFixed(2)}`} contentStyle={{ fontSize: 13 }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="space-y-2">
+                      {participacionMedioPago.map(({ medio, monto, porcentaje }, i) => (
+                        <div key={medio} className="flex items-center justify-between text-sm">
+                          <span className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: PALETA[i % PALETA.length] }}
+                            />
+                            {MEDIO_PAGO_LABEL[medio] ?? medio}
+                          </span>
                           <span className="font-semibold text-gray-900 dark:text-white">
                             ${monto.toFixed(2)} ({porcentaje.toFixed(0)}%)
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                          <div
-                            className="bg-kam-gold h-2 rounded-full"
-                            style={{ width: `${porcentaje}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

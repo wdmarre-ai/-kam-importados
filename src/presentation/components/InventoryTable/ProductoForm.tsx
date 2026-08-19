@@ -171,7 +171,7 @@ export default function ProductoForm({
               <input
                 type="number"
                 name="costo_unitario"
-                value={formData.costo_unitario}
+                value={formData.costo_unitario || ''}
                 onChange={handleChange}
                 className="input-field w-full"
                 step="0.01"
@@ -188,7 +188,7 @@ export default function ProductoForm({
               <input
                 type="number"
                 name="precio_minorista"
-                value={formData.precio_minorista}
+                value={formData.precio_minorista || ''}
                 onChange={handleChange}
                 className="input-field w-full"
                 step="0.01"
@@ -205,7 +205,7 @@ export default function ProductoForm({
               <input
                 type="number"
                 name="precio_mayorista"
-                value={formData.precio_mayorista}
+                value={formData.precio_mayorista || ''}
                 onChange={handleChange}
                 className="input-field w-full"
                 step="0.01"

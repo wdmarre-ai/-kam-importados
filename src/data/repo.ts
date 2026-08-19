@@ -71,6 +71,11 @@ export const perfilRepo = {
     if (error) throw error;
     return data;
   },
+
+  async delete(id: string) {
+    const { error } = await supabase.from('perfiles').delete().eq('id', id);
+    if (error) throw error;
+  },
 };
 
 // Sucursales
@@ -405,7 +410,7 @@ export const ventaRepo = {
   async getAllConDetalle(sucursalId: string, from?: string, to?: string) {
     let query = supabase
       .from('ventas')
-      .select('*, cliente:clientes(nombre), venta_items(producto_id, cantidad, subtotal, producto:productos(modelo, categoria_id, categoria:categorias(nombre)))')
+      .select('*, cliente:clientes(nombre), venta_items(producto_id, cantidad, subtotal, costo_unitario, producto:productos(modelo, categoria_id, categoria:categorias(nombre)))')
       .eq('sucursal_id', sucursalId)
       .order('fecha', { ascending: false });
 
