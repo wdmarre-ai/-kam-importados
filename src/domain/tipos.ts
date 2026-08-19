@@ -13,6 +13,8 @@ export interface Perfil {
 }
 
 // Sucursal
+export type ModoMoneda = 'costo_usd_precio_ars' | 'misma_moneda';
+
 export interface Sucursal {
   id: string;
   nombre: string;
@@ -22,6 +24,7 @@ export interface Sucursal {
   cuit?: string;
   logo_url?: string;
   cotizacion_dolar_actual?: number;
+  modo_moneda: ModoMoneda;
   created_at: string;
 }
 

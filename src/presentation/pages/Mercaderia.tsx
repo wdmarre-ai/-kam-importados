@@ -146,7 +146,9 @@ export default function Mercaderia() {
           <p className="text-3xl font-bold text-gray-900 dark:text-white">{productos.length}</p>
         </div>
         <div className="card">
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Valorizado Estimado</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+            Valorizado Estimado {sucursal?.modo_moneda === 'costo_usd_precio_ars' ? '(USD)' : ''}
+          </p>
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             ${totalValorizado.toFixed(2)}
           </p>
@@ -215,6 +217,7 @@ export default function Mercaderia() {
         <ActualizarCostoDolarForm
           categorias={categorias}
           cotizacionActual={sucursal?.cotizacion_dolar_actual}
+          modoMoneda={sucursal?.modo_moneda ?? 'costo_usd_precio_ars'}
           onSubmit={handleDolarSubmit}
           onCancel={() => setShowDolarForm(false)}
           isLoading={isActualizandoCostos}

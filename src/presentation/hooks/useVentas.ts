@@ -29,6 +29,10 @@ export function useVentas(from?: string, to?: string) {
     }) => {
       if (!sucursal || !user) throw new Error('No sucursal o usuario');
 
+      if (sucursal.modo_moneda === 'costo_usd_precio_ars' && !params.precioDolar) {
+        throw new Error('Falta la cotización del dólar para registrar la venta con el costo correcto.');
+      }
+
       const {
         items,
         clienteNombre,
@@ -82,11 +86,15 @@ export function useVentas(from?: string, to?: string) {
       });
 
       // 4. Crear items de venta
+      // El costo se guarda en la misma moneda que precio_venta (pesos) para que
+      // el margen sea consistente. Si el costo está fijado en USD, se convierte
+      // con el dólar usado en esta venta.
+      const convertirCosto = sucursal.modo_moneda === 'costo_usd_precio_ars';
       const ventaItems = items.map((item) => ({
         venta_id: venta.id,
         producto_id: item.productoId,
         precio_venta: item.precio,
-        costo_unitario: item.costoUnitario,
+        costo_unitario: convertirCosto && precioDolar ? item.costoUnitario * precioDolar : item.costoUnitario,
         cantidad: item.cantidad,
         subtotal: item.precio * item.cantidad,
       }));

@@ -165,7 +165,12 @@ export const productoRepo = {
     if (error) throw error;
   },
 
-  async actualizarCostosPorCategoria(categoriaId: string, sucursalId: string, factor: number) {
+  async actualizarCostosPorCategoria(
+    categoriaId: string,
+    sucursalId: string,
+    factor: number,
+    escalarCosto: boolean
+  ) {
     const { data: productos, error: errGet } = await supabase
       .from('productos')
       .select('id, costo_unitario, precio_minorista, precio_mayorista')
@@ -179,7 +184,10 @@ export const productoRepo = {
         supabase
           .from('productos')
           .update({
-            costo_unitario: p.costo_unitario * factor,
+            // Si el costo está fijo en dólares, no se toca: un cambio en
+            // la cotización no hace que el producto haya costado más
+            // dólares. Solo se reajustan los precios de venta en pesos.
+            ...(escalarCosto ? { costo_unitario: p.costo_unitario * factor } : {}),
             precio_minorista: p.precio_minorista * factor,
             precio_mayorista: p.precio_mayorista * factor,
           })

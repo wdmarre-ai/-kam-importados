@@ -35,7 +35,8 @@ export function useProductos() {
   const actualizarCostosMutation = useMutation({
     mutationFn: ({ categoriaId, factor }: { categoriaId: string; factor: number }) => {
       if (!sucursal) throw new Error('No hay sucursal seleccionada');
-      return productoRepo.actualizarCostosPorCategoria(categoriaId, sucursal.id, factor);
+      const escalarCosto = sucursal.modo_moneda === 'misma_moneda';
+      return productoRepo.actualizarCostosPorCategoria(categoriaId, sucursal.id, factor, escalarCosto);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['productos', sucursal?.id] });

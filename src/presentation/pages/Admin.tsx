@@ -3,7 +3,7 @@ import { useStore } from '../../store';
 import { sucursalRepo, storageRepo } from '../../data/repo';
 import { useUsuarios } from '../hooks/useUsuarios';
 import UsuarioForm from '../components/Admin/UsuarioForm';
-import type { UserRole } from '../../domain/tipos';
+import type { ModoMoneda, UserRole } from '../../domain/tipos';
 
 const ROL_LABEL: Record<UserRole, string> = {
   admin: 'Administrador',
@@ -31,6 +31,7 @@ export default function Admin() {
   const [telefono, setTelefono] = useState(sucursal?.telefono ?? '');
   const [cuit, setCuit] = useState(sucursal?.cuit ?? '');
   const [cotizacionDolar, setCotizacionDolar] = useState(sucursal?.cotizacion_dolar_actual ?? 0);
+  const [modoMoneda, setModoMoneda] = useState<ModoMoneda>(sucursal?.modo_moneda ?? 'costo_usd_precio_ars');
   const [logo, setLogo] = useState<File | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
@@ -59,6 +60,7 @@ export default function Admin() {
         cuit,
         logo_url: logoUrl,
         cotizacion_dolar_actual: cotizacionDolar || null,
+        modo_moneda: modoMoneda,
       });
       setSucursal(actualizada);
       setLogo(null);
@@ -232,6 +234,27 @@ export default function Admin() {
               La cotización queda guardada y se usa como valor por defecto en Ventas y en
               Mercadería. La actualizás acá una vez y no hace falta escribirla cada vez.
             </p>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                ¿Cómo manejás el costo de la mercadería?
+              </label>
+              <select
+                value={modoMoneda}
+                onChange={(e) => setModoMoneda(e.target.value as ModoMoneda)}
+                className="input-field w-full"
+                disabled={guardando}
+              >
+                <option value="costo_usd_precio_ars">
+                  Costo en dólares fijo, precios en pesos
+                </option>
+                <option value="misma_moneda">Todo en la misma moneda (sin conversión)</option>
+              </select>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {modoMoneda === 'costo_usd_precio_ars'
+                  ? 'El costo cargado en cada producto es en dólares y no cambia solo. Al actualizar la cotización, los precios de venta en pesos se reajustan pero el costo en dólares queda igual.'
+                  : 'Costo y precios de venta están en la misma moneda, sin conversión entre ellos.'}
+              </p>
+            </div>
             <button type="submit" className="btn-primary" disabled={guardando}>
               {guardando ? 'Guardando...' : 'Guardar Datos'}
             </button>

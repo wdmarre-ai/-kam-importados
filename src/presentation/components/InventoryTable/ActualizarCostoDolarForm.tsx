@@ -1,8 +1,10 @@
 import { useState } from 'react';
+import type { ModoMoneda } from '../../../domain/tipos';
 
 interface ActualizarCostoDolarFormProps {
   categorias: any[];
   cotizacionActual?: number;
+  modoMoneda: ModoMoneda;
   onSubmit: (data: { categoriaId: string; factor: number }) => void;
   onCancel: () => void;
   isLoading?: boolean;
@@ -11,6 +13,7 @@ interface ActualizarCostoDolarFormProps {
 export default function ActualizarCostoDolarForm({
   categorias,
   cotizacionActual,
+  modoMoneda,
   onSubmit,
   onCancel,
   isLoading = false,
@@ -97,8 +100,17 @@ export default function ActualizarCostoDolarForm({
 
           {dolarAnterior > 0 && dolarNuevo > 0 && (
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Costos y precios de esa categoría se multiplican por{' '}
-              <strong>{factor.toFixed(4)}</strong>
+              {modoMoneda === 'costo_usd_precio_ars' ? (
+                <>
+                  Los precios de venta en pesos se multiplican por{' '}
+                  <strong>{factor.toFixed(4)}</strong>. El costo en dólares no cambia.
+                </>
+              ) : (
+                <>
+                  Costos y precios de esa categoría se multiplican por{' '}
+                  <strong>{factor.toFixed(4)}</strong>
+                </>
+              )}
             </p>
           )}
 
