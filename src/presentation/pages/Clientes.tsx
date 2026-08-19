@@ -15,8 +15,25 @@ function semaforoFrecuencia(cantidadCompras: number): { color: string; texto: st
 
 export default function Clientes() {
   const sucursal = useStore((s) => s.sucursal);
-  const { clientes, isLoading } = useClientes();
+  const { clientes, isLoading, eliminar, isEliminando } = useClientes();
   const [busqueda, setBusqueda] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleEliminar = (id: string, nombre: string, cantidadCompras: number) => {
+    if (cantidadCompras > 0) {
+      setErrorMsg(
+        `❌ "${nombre}" tiene compras o reparaciones registradas, no se puede eliminar (se perdería el historial).`
+      );
+      setTimeout(() => setErrorMsg(''), 4000);
+      return;
+    }
+    if (confirm(`¿Eliminar a "${nombre}"? Esta acción no se puede deshacer.`)) {
+      setErrorMsg('');
+      eliminar(id, {
+        onError: (err: any) => setErrorMsg(`❌ Error al eliminar: ${err.message}`),
+      });
+    }
+  };
 
   const filtrados = clientes.filter(
     (c) => c.nombre.toLowerCase().includes(busqueda.toLowerCase()) || c.telefono.includes(busqueda)
@@ -54,6 +71,12 @@ export default function Clientes() {
         />
       </div>
 
+      {errorMsg && (
+        <div className="p-3 bg-red-50 dark:bg-red-900 dark:bg-opacity-20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-400 text-sm mb-4">
+          {errorMsg}
+        </div>
+      )}
+
       <div className="card">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
           Registro de Clientes ({filtrados.length})
@@ -79,7 +102,8 @@ export default function Clientes() {
                   <th className="pb-2 pr-4">Tipo</th>
                   <th className="pb-2 pr-4">Última compra</th>
                   <th className="pb-2 pr-4">Frecuencia</th>
-                  <th className="pb-2">Contacto</th>
+                  <th className="pb-2 pr-4">Contacto</th>
+                  <th className="pb-2">Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -104,7 +128,7 @@ export default function Clientes() {
                           </span>
                         )}
                       </td>
-                      <td className="py-2">
+                      <td className="py-2 pr-4">
                         <a
                           href={linkWhatsapp(
                             c.telefono,
@@ -116,6 +140,15 @@ export default function Clientes() {
                         >
                           💬 WhatsApp
                         </a>
+                      </td>
+                      <td className="py-2">
+                        <button
+                          onClick={() => handleEliminar(c.id, c.nombre, c.cantidadCompras)}
+                          disabled={isEliminando}
+                          className="text-red-600 hover:text-red-800 text-sm disabled:opacity-50"
+                        >
+                          🗑 Eliminar
+                        </button>
                       </td>
                     </tr>
                   );

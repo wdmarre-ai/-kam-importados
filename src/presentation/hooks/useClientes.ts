@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { clienteRepo, ventaRepo } from '../../data/repo';
 import { useStore } from '../../store';
 
@@ -14,6 +14,7 @@ export interface ClienteConCompras {
 
 export function useClientes() {
   const sucursal = useStore((s) => s.sucursal);
+  const queryClient = useQueryClient();
 
   const { data: clientesBase = [], isLoading: cargandoClientes } = useQuery({
     queryKey: ['clientes', sucursal?.id],
@@ -47,5 +48,17 @@ export function useClientes() {
     };
   });
 
-  return { clientes, isLoading: cargandoClientes || cargandoVentas };
+  const eliminarMutation = useMutation({
+    mutationFn: (id: string) => clienteRepo.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['clientes', sucursal?.id] });
+    },
+  });
+
+  return {
+    clientes,
+    isLoading: cargandoClientes || cargandoVentas,
+    eliminar: eliminarMutation.mutate,
+    isEliminando: eliminarMutation.isPending,
+  };
 }

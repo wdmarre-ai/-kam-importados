@@ -370,6 +370,11 @@ export const clienteRepo = {
     return data;
   },
 
+  async delete(id: string) {
+    const { error } = await supabase.from('clientes').delete().eq('id', id);
+    if (error) throw error;
+  },
+
   async getOrCreate(telefono: string, sucursalId: string, clienteData: any) {
     try {
       const existing = await this.getByTelefono(telefono, sucursalId);
