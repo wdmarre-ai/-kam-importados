@@ -17,12 +17,12 @@ export default defineConfig({
         clientsClaim: true,
         cleanupOutdatedCaches: true,
       },
-      includeAssets: ['favicon.ico', 'robots.txt'],
+      includeAssets: ['favicon-32.png', 'favicon-180.png'],
       manifest: {
         name: 'KAM Importados - Gestión',
         short_name: 'KAM Importados',
         description: 'Sistema de gestión de venta y reparación de telefonía celular',
-        theme_color: '#D4A574',
+        theme_color: '#C9A227',
         background_color: '#FFFFFF',
         display: 'standalone',
         icons: [
